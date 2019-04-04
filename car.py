@@ -13,32 +13,50 @@ def arc(x=0, z=0, r=1, theta1=0, theta2=PI, resolution=180):
 
 class Car:
     def __init__(self):
-        
-        # Wheel well dimensions.
-        wheelbase = 2.74
-        wellCenterHeight = 0.124847
-        wellRadius = 0.38
 
-        # Front wheel well.
-        xFrontWellCenter = -0.358914
-        chassisCoords = arc(x=xFrontWellCenter, z=wellCenterHeight,
-            r=wellRadius, theta1=math.radians(-19.18),
+        # Develop the profile of the vehicle chassis. All dimensions are in
+        # meters. A number of dimensions were either obtained empirically
+        # or estimate from photographs. The "initial" coordinate system
+        # is based on the vehicle facing right, with the positive x axis
+        # extending to the right and the positive z axis extending up.
+        # x=0 is at the right corner of the front wheel well, and z=0 is at
+        # ground level.
+        # TODO: pictures
+        
+        # Wheel well and related dimensions.
+        wheelbase = 2.74
+        well_center_height = 0.124847
+        well_radius = 0.38
+
+        front_well_center = -0.358914
+        chassisCoords = arc(x=front_well_center, z=well_center_height,
+            r=well_radius, theta1=math.radians(-19.18),
             theta2=math.radians(200.96))
 
-        # Rear wheel well.
-        xRearWellCenter = xFrontWellCenter - wheelbase
-        chassisCoords = np.concatenate((chassisCoords,
-            arc(x=xRearWellCenter, z=wellCenterHeight, r=wellRadius,
+        rear_well_center = front_well_center - wheelbase
+        chassis_coords = np.concatenate((chassis_coords,
+            arc(x=rear_well_center, z=well_center_height, r=well_radius,
             theta1=math.radians(-19.18), theta2=math.radians(194.3))), axis=1)
 
-        # Car profile excluding wheel wells.
-        lines = np.array([
+        # The remaining chassis profile is developed by traveling from the left
+        # corner of the rear wheel well clockwise until arriving at the right
+        # corner of the front wheel well. The array chassis_point_deltas
+        # contains the change in x (first row) and change in z (second row)
+        # from one point to the next, i.e., the first ordered pair
+        # (-.514, 0) indicates that the first chassis point is located .514 m
+        # left of the corner of the rear wheel well and at the same height.
+        # The second pair of coordinates (-.069, .392) indicates that the
+        # next point, which corresponds to the rear bumper, is located .069 m
+        # left of the previous point and .392 m above it.
+        # TODO: picture worth a thousand words.
+        chassis_point_deltas = np.array([
             [-.514, -.069, .269, .392, 1.03, .891, .583, 1.32, .138, -.092],
             [0, .392, .415, .046, .292, 0, -.33, -.253, -.238, -.353]])
 
-        for i in range(len(lines[0,:])):
+        for i in range(len(chassis_point_deltas[0,:])):
             chassisCoords = np.append(
-                chassisCoords, chassisCoords[:,[-1]] + lines[:,[i]], axis=1)
+                chassisCoords, chassisCoords[:,[-1]] + chassis_point_deltas[:,[i]], axis=1)
+
         chassisCoords = np.append(chassisCoords, chassisCoords[:,[0]], axis=1)
         chassisCoords = np.vstack(
             (chassisCoords, np.ones((len(chassisCoords[0,:]),))))
