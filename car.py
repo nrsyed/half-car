@@ -135,14 +135,12 @@ class Car:
         self.wheel = wheel
         self.hub = hub
 
-        """
-
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350
         m_c = 1600
         m_f = 2 * 23
         m_r = m_f
-        I_yy = 2500
+        I_zz = 2500
         m = m_c + m_f + m_r
 
         k_fs = 80000
@@ -156,71 +154,80 @@ class Car:
         c_ft = 20
         c_rt = 20
 
-        # NOTE: matrices and vectors below are based on the following
-        # solution vector: {z_c, phi, z_f, z_r}
+         """
+         The matrices and vectors below are based on the solution
+         vector {y_c, phi, y_f, y_r}. As a numpy array:
+         np.array([
+            [y_c],
+            [phi],
+            [y_f],
+            [y_r]
+        ])
+        """
+          
 
-        massVector = np.array([m_c, I_yy, m_f, m_r])
+        mass_vector = np.array([m_c, I_zz, m_f, m_r])
 
-        self.stiffnessMatrix = (np.array([
+        self.stiffness_matrix = (np.array([
             [-(k_fs + k_rs), l_r * k_rs - l_f * k_fs, k_fs, k_rs],
             [-(l_f * k_fs - l_r * k_rs), -(l_f**2 * k_fs + l_r**2 * k_rs),
                 l_f * k_fs, -l_r * k_rs],
             [k_fs, l_f * k_fs, -(k_fs + k_ft), 0],
             [k_rs, -l_r * k_rs, 0, -(k_rs + k_rt)]])
-            / massVector[:, None])
+            / mass_vector[:, None])
 
-        self.dampingMatrix = (np.array([
+        self.damping_matrix = (np.array([
             [-(c_fs + c_rs), l_r * c_rs - l_f * c_fs, c_fs, c_rs],
             [-(l_f * c_fs - l_r * c_rs), -(l_f**2 * c_fs + l_r**2 * c_rs),
                 l_f * c_fs, -l_r * c_rs],
             [c_fs, l_f * c_fs, -(c_fs + c_ft), 0],
             [c_rs, -l_r * c_rs, 0, -(c_rs + c_rt)]])
-            / massVector[:, None])
+            / mass_vector[:, None])
 
-        self.roadStiffnessMatrix = (np.array([
+        self.road_stiffness_matrix = (np.array([
             [0, 0],
             [0, 0],
             [k_ft, 0],
             [0, k_rt]])
-            / massVector[:, None])
+            / mass_vector[:, None])
 
-        self.roadDampingMatrix = (np.array([
+        self.road_damping_matrix = (np.array([
             [0, 0],
             [0, 0],
             [c_ft, 0],
             [0, c_rt]])
-            / massVector[:, None])
+            / mass_vector[:, None])
 
-        self.m_c = m_c
-        self.m_f = m_f
-        self.m_r = m_r
-        self.I_yy = I_yy
-        self.m = m
+        self.properties = {
+            "m_c": m_c,
+            "m_f": m_f,
+            "m_r": m_r,
+            "I_zz": I_zz,
+            "m": m,
+            "k_fs": k_fs,
+            "k_rs": k_rs,
+            "k_ft": k_ft,
+            "k_rt": k_rt,
+            "c_fs": c_fs,
+            "c_rs": c_rs,
+            "c_ft": c_ft,
+            "c_rt": c_rt,
+            "mass_vector": mass_vector
+        }
 
-        self.k_fs = k_fs
-        self.k_rs = k_rs
-        self.k_ft = k_ft
-        self.k_rt = k_rt
+        # Initialize state vectors and other variables.
+        self.state = {
+            "position": np.zeros((4,1), dtype=np.float),
+            "velocity": np.zeros((4,1), dtype=np.float),
+            "acceleration": np.zeros((4,1), dtype=np.float),
+            "road_position": np.zeros((2,1), dtype=np.float),
+            "road_velocity": np.zeros((2,1), dtype=np.float),
+            "horizontal_acceleration": 0,
+            "horizontal_velocity": 0,
+            "distance_traveled": 0
+        }
 
-        self.c_fs = c_fs
-        self.c_rs = c_rs
-        self.c_ft = c_ft
-        self.c_rt = c_rt
-
-        self.massVector = massVector
-
-        # Initialize vector arrays and other variables.
-        self.positionVector = np.zeros((4,1), dtype=np.float)
-        self.velocityVector = np.zeros((4,1), dtype=np.float)
-        self.accelerationVector = np.zeros((4,1), dtype=np.float)
-        self.roadPositionVector = np.zeros((2,1), dtype=np.float)
-        self.roadVelocityVector = np.zeros((2,1), dtype=np.float)
-
-        # Initialize variables for motion in x direction.
-        self.horizontalAccel = 0
-        self.horizontalVelocity = 0
-        self.distTraveled = 0
-
+        """
         # Initialize height of COG above front wheel point of contact.
         self.lowestPoint = np.amin(self.chassisCoords[1,:])
         self.groundClearance = 7 * 0.0254
