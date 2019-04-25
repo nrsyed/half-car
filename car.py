@@ -1,24 +1,31 @@
 import math
 import numpy as np
 
+
 PI = math.pi
-def arc(x=0, z=0, r=1, theta1=0, theta2=PI, resolution=180):
-    '''Returns x and z coords (row 0 and row 1, respectively)
-        of arc. "resolution" = number of points per 2*PI rads.
-        Input arguments x and z refer to centerpoint of arc.
-    '''
+
+
+def arc(x=0, y=0, r=1, theta1=0, theta2=PI, resolution=180):
+    #TODO: revisit docstrings
+    """
+    Returns x and y coords (row 0 and row 1, respectively)
+    of arc. "resolution" = number of points per 2*PI rads.
+    Input arguments x and y refer to centerpoint of arc.
+    """
+
     thetas = np.linspace(theta1, theta2,
         int(abs(theta2 - theta1) * (resolution / (2*PI))))
-    return np.vstack((x + r*np.cos(thetas), z + r*np.sin(thetas)))
+    return np.vstack((x + r*np.cos(thetas), y + r*np.sin(thetas)))
+
 
 class Car:
     def __init__(self):
 
         # Develop the profile of the vehicle chassis. All dimensions are in
         # meters. A number of dimensions were either obtained empirically
-        # or estimate from photographs. The "initial" coordinate system
+        # or estimated from photographs. The "initial" coordinate system
         # is based on the vehicle facing right, with the positive x axis
-        # extending to the right and the positive z axis extending up.
+        # extending to the right and the positive y axis extending up.
         # x=0 is at the right corner of the front wheel well, and z=0 is at
         # ground level.
         # TODO: pictures
@@ -29,19 +36,19 @@ class Car:
         well_radius = 0.38
 
         front_well_center = -0.358914
-        chassisCoords = arc(x=front_well_center, z=well_center_height,
+        chassis_coords = arc(x=front_well_center, y=well_center_height,
             r=well_radius, theta1=math.radians(-19.18),
             theta2=math.radians(200.96))
 
         rear_well_center = front_well_center - wheelbase
         chassis_coords = np.concatenate((chassis_coords,
-            arc(x=rear_well_center, z=well_center_height, r=well_radius,
+            arc(x=rear_well_center, y=well_center_height, r=well_radius,
             theta1=math.radians(-19.18), theta2=math.radians(194.3))), axis=1)
 
         # The remaining chassis profile is developed by traveling from the left
         # corner of the rear wheel well clockwise until arriving at the right
         # corner of the front wheel well. The array chassis_point_deltas
-        # contains the change in x (first row) and change in z (second row)
+        # contains the change in x (first row) and change in y (second row)
         # from one point to the next, i.e., the first ordered pair
         # (-.514, 0) indicates that the first chassis point is located .514 m
         # left of the corner of the rear wheel well and at the same height.
@@ -49,47 +56,86 @@ class Car:
         # next point, which corresponds to the rear bumper, is located .069 m
         # left of the previous point and .392 m above it.
         # TODO: picture worth a thousand words.
-        chassis_point_deltas = np.array([
+        chassis_deltas = [
             [-.514, -.069, .269, .392, 1.03, .891, .583, 1.32, .138, -.092],
-            [0, .392, .415, .046, .292, 0, -.33, -.253, -.238, -.353]])
+            [0, .392, .415, .046, .292, 0, -.33, -.253, -.238, -.353]
+        ]
 
-        for i in range(len(chassis_point_deltas[0,:])):
-            chassisCoords = np.append(
-                chassisCoords, chassisCoords[:,[-1]] + chassis_point_deltas[:,[i]], axis=1)
+        for delta_x, delta_y in zip(*chassis_deltas):
+            next_point = np.array([
+                [chassis_coords[0, -1] + delta_x],
+                [chassis_coords[1, -1] + delta_y]
+            ])
+            chassis_coords = np.append(chassis_coords, next_point, axis=1)
 
-        chassisCoords = np.append(chassisCoords, chassisCoords[:,[0]], axis=1)
-        chassisCoords = np.vstack(
-            (chassisCoords, np.ones((len(chassisCoords[0,:]),))))
+        # Add the first point to the end of the array to complete the loop.
+        chassis_coords = np.append(chassis_coords, chassis_coords[:, [0]], axis=1)
 
-        # Chassis COG location.
-        chassisCOG = np.array([
-            [xRearWellCenter + (0.6 * wheelbase)], [0.4064], [1]])
-        
-        # Shift chassis coords so COG is (0, 0).
-        chassisCoords[:2,:] -= chassisCOG[:2,:]
-        self.chassisCoords = chassisCoords
+        # Add a third row of arbitrary values to the coordinates to make it
+        # three-dimensional, allowing the use of 3D transformation matrices
+        # and "3D-proofing" the implementation of the vehicle's appearance.
+        chassis_coords = np.vstack(
+            (chassis_coords, np.zeros((chassis_coords.shape[1])))
+        )
+
+        # Set the vehicle COG and shift chassis_coords such that the COG is at
+        # (0, 0, 0). This simplifies things later.
         l_f = 0.4 * wheelbase
         l_r = 0.6 * wheelbase
 
-        # Get shifted wheel well coordinates.
-        self.frontWellCenter = (np.array([[xFrontWellCenter], [wellCenterHeight], [1]])
-            - chassisCOG)
-        self.rearWellCenter = (np.array([[xRearWellCenter], [wellCenterHeight], [1]])
-            - chassisCOG)
-        self.frontWellTop = self.frontWellCenter + np.array([[0], [wellRadius], [1]])
-        self.rearWellTop = self.rearWellCenter + np.array([[0], [wellRadius], [1]])
+        vehicle_COG = np.array([
+            [rear_well_center + l_r],
+            [0.4064],
+            [0]
+        ])
 
-        # Wheel.
-        hubDiameter = 17 * .0254    # in meters
-        tireWidth = 0.225
-        tireAspect = 0.5
-        tireHeight = tireAspect * tireWidth
-        self.hubRadius = 0.5 * hubDiameter
-        self.wheelRadius = self.hubRadius + tireHeight
-        self.wheel = arc(r=self.wheelRadius, theta2=2*PI)
-        self.hub = arc(r=self.hubRadius, theta2=2*PI)
-
+        chassis_coords -= vehicle_COG
+        self.chassis_coords = chassis_coords
         self.wheelbase = wheelbase
+
+        # Similarly shift all wheel well coordinates and get wheel well position
+        # vectors in the same coordinate reference frame as chassis_coords.
+        front_well_center = np.array([
+            [front_well_center],
+            [well_center_height],
+            [0]
+        ])
+
+        rear_well_center = np.array([
+            [rear_well_center],
+            [well_center_height],
+            [0]
+        ])
+
+        front_well_center -= vehicle_COG
+        rear_well_center -= vehicle_COG
+
+        front_well_top = front_well_center + np.array([[0], [well_radius], [0]])
+        rear_well_top = rear_well_center + np.array([[0], [well_radius], [0]])
+
+        self.front_well_center = front_well_center
+        self.rear_well_center = rear_well_center
+        self.front_well_top = front_well_top
+        self.rear_well_top = rear_well_top
+
+        # Wheel-related dimensions based on 2010 Accord EX-L stock tire type
+        # P225/50R17 (225 mm width, 50% aspect ratio, 17 inch hub diameter).
+        tire_width = 0.225
+        tire_aspect = 0.50
+        hub_diameter = 17 * 0.0254      # convert in to m
+
+        tire_height = tire_aspect * tire_width
+        hub_radius = 0.5 * hub_diameter
+        wheel_radius = hub_radius + tire_height
+        wheel = arc(r=wheel_radius, theta2=2*PI)
+        hub = arc(r=hub_radius, theta2=2*PI)
+
+        self.hub_radius = hub_radius
+        self.wheel_radius = wheel_radius
+        self.wheel = wheel
+        self.hub = hub
+
+        """
 
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350
@@ -192,3 +238,4 @@ class Car:
             [-h * self.m * self.horizontalAccel / self.wheelbase]])
             / self.massVector[:, None])
         return normalForceVector
+        """
