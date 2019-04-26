@@ -191,6 +191,9 @@ class Car:
         ground_clearance = 7 * 0.0254
         init_height = -lowest_point + ground_clearance
 
+        # Set vehicle max speed in m/s.
+        max_speed = 60
+
         # Store vehicle properties and appearance (coordinates) in dictionaries.
         self.appearance = {
             "chassis": chassis,
@@ -228,7 +231,8 @@ class Car:
             "stiffness_matrix": stiffness_matrix,
             "damping_matrix": damping_matrix,
             "road_stiffness_matrix": road_stiffness_matrix,
-            "road_damping_matrix": road_damping_matrix
+            "road_damping_matrix": road_damping_matrix,
+            "max_speed": max_speed
         }
 
         # Initialize state vectors and other variables.
@@ -244,6 +248,31 @@ class Car:
         }
 
 
+    def update_state(self, time_step): 
+        position = self.state["position"]
+        velocity = self.state["velocity"]
+        accel = self.state["accel"]
+        road_position = self.state["road_position"]
+        road_velocity = self.state["road_velocity"]
+
+        # TODO
+
+
+        """
+        car.accelerationVector = (car.stiffnessMatrix.dot(car.positionVector)
+            + car.dampingMatrix.dot(car.velocityVector)
+            + car.roadStiffnessMatrix.dot(car.roadPositionVector)
+            + car.roadDampingMatrix.dot(car.roadVelocityVector)
+            + car.normal_force_vector())
+
+        # Clamp pitch angle to +/- 5 deg.
+        if car.positionVector[1] > math.radians(5):
+            car.positionVector[1] = math.radians(5)
+            car.velocityVector[1] = 0
+        elif car.positionVector[1] < math.radians(-5):
+            car.positionVector[1] = math.radians(-5)
+            car.velocityVector[1] = 0
+        """
 
     @property
     def normal_force_vector(self):
