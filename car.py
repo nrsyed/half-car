@@ -36,12 +36,12 @@ class Car:
         well_radius = 0.38
 
         front_well_center = -0.358914
-        chassis_coords = arc(x=front_well_center, y=well_center_height,
+        chassis = arc(x=front_well_center, y=well_center_height,
             r=well_radius, theta1=math.radians(-19.18),
             theta2=math.radians(200.96))
 
         rear_well_center = front_well_center - wheelbase
-        chassis_coords = np.concatenate((chassis_coords,
+        chassis = np.concatenate((chassis,
             arc(x=rear_well_center, y=well_center_height, r=well_radius,
             theta1=math.radians(-19.18), theta2=math.radians(194.3))), axis=1)
 
@@ -63,22 +63,22 @@ class Car:
 
         for delta_x, delta_y in zip(*chassis_deltas):
             next_point = np.array([
-                [chassis_coords[0, -1] + delta_x],
-                [chassis_coords[1, -1] + delta_y]
+                [chassis[0, -1] + delta_x],
+                [chassis[1, -1] + delta_y]
             ])
-            chassis_coords = np.append(chassis_coords, next_point, axis=1)
+            chassis = np.append(chassis, next_point, axis=1)
 
         # Add the first point to the end of the array to complete the loop.
-        chassis_coords = np.append(chassis_coords, chassis_coords[:, [0]], axis=1)
+        chassis = np.append(chassis, chassis[:, [0]], axis=1)
 
         # Add a third row of arbitrary values to the coordinates to make it
         # three-dimensional, allowing the use of 3D transformation matrices
         # and "3D-proofing" the implementation of the vehicle's appearance.
-        chassis_coords = np.vstack(
-            (chassis_coords, np.zeros((chassis_coords.shape[1])))
+        chassis = np.vstack(
+            (chassis, np.zeros((chassis.shape[1])))
         )
 
-        # Set the vehicle COG and shift chassis_coords such that the COG is at
+        # Set the vehicle COG and shift chassis such that the COG is at
         # (0, 0, 0). This simplifies things later.
         l_f = 0.4 * wheelbase
         l_r = 0.6 * wheelbase
@@ -89,12 +89,10 @@ class Car:
             [0]
         ])
 
-        chassis_coords -= vehicle_COG
-        self.chassis_coords = chassis_coords
-        self.wheelbase = wheelbase
+        chassis -= vehicle_COG
 
         # Similarly shift all wheel well coordinates and get wheel well position
-        # vectors in the same coordinate reference frame as chassis_coords.
+        # vectors in the same coordinate reference frame as chassis.
         front_well_center = np.array([
             [front_well_center],
             [well_center_height],
@@ -113,11 +111,6 @@ class Car:
         front_well_top = front_well_center + np.array([[0], [well_radius], [0]])
         rear_well_top = rear_well_center + np.array([[0], [well_radius], [0]])
 
-        self.front_well_center = front_well_center
-        self.rear_well_center = rear_well_center
-        self.front_well_top = front_well_top
-        self.rear_well_top = rear_well_top
-
         # Wheel-related dimensions based on 2010 Accord EX-L stock tire type
         # P225/50R17 (225 mm width, 50% aspect ratio, 17 inch hub diameter).
         tire_width = 0.225
@@ -129,11 +122,6 @@ class Car:
         wheel_radius = hub_radius + tire_height
         wheel = arc(r=wheel_radius, theta2=2*PI)
         hub = arc(r=hub_radius, theta2=2*PI)
-
-        self.hub_radius = hub_radius
-        self.wheel_radius = wheel_radius
-        self.wheel = wheel
-        self.hub = hub
 
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350
@@ -168,7 +156,7 @@ class Car:
 
         mass_vector = np.array([m_c, I_zz, m_f, m_r])
 
-        self.stiffness_matrix = (np.array([
+        stiffness_matrix = (np.array([
             [-(k_fs + k_rs), l_r * k_rs - l_f * k_fs, k_fs, k_rs],
             [-(l_f * k_fs - l_r * k_rs), -(l_f**2 * k_fs + l_r**2 * k_rs),
                 l_f * k_fs, -l_r * k_rs],
@@ -176,7 +164,7 @@ class Car:
             [k_rs, -l_r * k_rs, 0, -(k_rs + k_rt)]])
             / mass_vector[:, None])
 
-        self.damping_matrix = (np.array([
+        damping_matrix = (np.array([
             [-(c_fs + c_rs), l_r * c_rs - l_f * c_fs, c_fs, c_rs],
             [-(l_f * c_fs - l_r * c_rs), -(l_f**2 * c_fs + l_r**2 * c_rs),
                 l_f * c_fs, -l_r * c_rs],
@@ -184,21 +172,45 @@ class Car:
             [c_rs, -l_r * c_rs, 0, -(c_rs + c_rt)]])
             / mass_vector[:, None])
 
-        self.road_stiffness_matrix = (np.array([
+        road_stiffness_matrix = (np.array([
             [0, 0],
             [0, 0],
             [k_ft, 0],
             [0, k_rt]])
             / mass_vector[:, None])
 
-        self.road_damping_matrix = (np.array([
+        road_damping_matrix = (np.array([
             [0, 0],
             [0, 0],
             [c_ft, 0],
             [0, c_rt]])
             / mass_vector[:, None])
 
+        # Compute baseline height of COG above front wheel point of contact.
+        lowest_point = np.amin(chassis[1,:])
+        ground_clearance = 7 * 0.0254
+        init_height = -lowest_point + ground_clearance
+
+        # Store vehicle properties and appearance (coordinates) in dictionaries.
+        self.appearance = {
+            "chassis": chassis,
+            "front_well_center": front_well_center,
+            "rear_well_center": rear_well_center,
+            "front_well_top": front_well_top,
+            "rear_well_top": rear_well_top,
+            "hub_radius": hub_radius,
+            "wheel_radius": wheel_radius,
+            "wheel": wheel,
+            "hub": hub,
+            "lowest_point": lowest_point,
+            "ground_clearance": ground_clearance
+        }
+
         self.properties = {
+            "l_f": l_f,
+            "l_r": l_r,
+            "init_height": init_height,
+            "wheelbase": wheelbase,
             "m_c": m_c,
             "m_f": m_f,
             "m_r": m_r,
@@ -212,37 +224,48 @@ class Car:
             "c_rs": c_rs,
             "c_ft": c_ft,
             "c_rt": c_rt,
-            "mass_vector": mass_vector
+            "mass_vector": mass_vector,
+            "stiffness_matrix": stiffness_matrix,
+            "damping_matrix": damping_matrix,
+            "road_stiffness_matrix": road_stiffness_matrix,
+            "road_damping_matrix": road_damping_matrix
         }
 
         # Initialize state vectors and other variables.
         self.state = {
             "position": np.zeros((4,1), dtype=np.float),
             "velocity": np.zeros((4,1), dtype=np.float),
-            "acceleration": np.zeros((4,1), dtype=np.float),
+            "accel": np.zeros((4,1), dtype=np.float),
             "road_position": np.zeros((2,1), dtype=np.float),
             "road_velocity": np.zeros((2,1), dtype=np.float),
-            "horizontal_acceleration": 0,
+            "horizontal_accel": 0,
             "horizontal_velocity": 0,
             "distance_traveled": 0
         }
 
-        """
-        # Initialize height of COG above front wheel point of contact.
-        self.lowestPoint = np.amin(self.chassisCoords[1,:])
-        self.groundClearance = 7 * 0.0254
-        self.h_0 = -self.lowestPoint + self.groundClearance
 
-        self.l_f = l_f
-        self.l_r = l_r
 
+    @property
     def normal_force_vector(self):
-        h = self.h_0 + self.positionVector[0] - self.positionVector[2]
-        normalForceVector = (np.array([
+        init_height = self.properties["init_height"]
+        wheelbase = self.properties["wheelbase"]
+        position = self.state["position"]
+        horizontal_accel = self.state["horizontal_accel"]
+        m = self.properties["m"]
+        mass_vector = self.properties["mass_vector"]
+
+        # Obtain the height of the COG above the front wheel point of contact,
+        # i.e., the height of the COG about the driving force vector (assuming
+        # a front-wheel drive vehicle).
+        height = init_height + position[0] + position[2]
+
+        normal_force_vector = (np.array([
             [0],
             [0],
-            [h * self.m * self.horizontalAccel / self.wheelbase],
-            [-h * self.m * self.horizontalAccel / self.wheelbase]])
-            / self.massVector[:, None])
-        return normalForceVector
-        """
+            [height * m * horizontal_accel / wheelbase],
+            [-height * m * horizontal_accel / wheelbase]
+            ])
+            / mass_vector[:, None]
+        )
+
+        return normal_force_vector
