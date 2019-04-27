@@ -152,7 +152,6 @@ class Car:
             [y_r]
         ])
         """
-          
 
         mass_vector = np.array([m_c, I_zz, m_f, m_r])
 
@@ -191,8 +190,12 @@ class Car:
         ground_clearance = 7 * 0.0254
         init_height = -lowest_point + ground_clearance
 
-        # Set vehicle max speed in m/s.
+        # Set vehicle max speed in m/s, and max horizontal acceleration and
+        # max horizontal deceleration (braking) in m/s^2. Max acceleration is
+        # roughly based on a 0-60 mph time of 6.2 s.
         max_speed = 60
+        max_accel = 4.4
+        max_decel = -9.0
 
         # Store vehicle properties and appearance (coordinates) in dictionaries.
         self.appearance = {
@@ -232,7 +235,9 @@ class Car:
             "damping_matrix": damping_matrix,
             "road_stiffness_matrix": road_stiffness_matrix,
             "road_damping_matrix": road_damping_matrix,
-            "max_speed": max_speed
+            "max_speed": max_speed,
+            "max_accel": max_accel,
+            "max_decel": max_decel
         }
 
         # Initialize state vectors and other variables.
@@ -247,6 +252,56 @@ class Car:
             "distance_traveled": 0
         }
 
+
+    # TODO: allow independent gas and brake, fix gas and brake.
+
+    def set_accel(self, accel):
+        """
+        Manually set car's horizontal acceleration in m/s^2.
+        """
+
+        max_accel = self.properties["max_accel"]
+        max_decel = self.properties["max_decel"]
+        if max_decel <= accel <= max_accel:
+            self.state["horizontal_accel"] = accel
+
+
+    def set_velocity(self, velocity):
+        """
+        Manually set car's horizontal velocity in m/s.
+        """
+
+        if 0 <= velocity <= self.properties["max_speed"]:
+            self.state["horizontal_velocity"] = velocity
+
+
+    def gas(self, accel, units="mps"):
+        """
+        Set the car's horizontal acceleration in m/s^2 (i.e.,
+        press the gas pedal) or as a fraction (0 <= accel <= 1) of
+        max acceleration.
+        """
+
+        max_accel = self.properties["max_accel"]
+        if accel >= 0:
+            if units == "fraction":
+                new_accel = accel * max_accel
+            else:
+                new_accel = accel
+            self.state["horizontal_accel"] = min(new_accel, max_accel)
+
+
+    def brake(self, decel, units="mps"):
+        """
+        Set the car's horizontal deceleration in m/s^2 (i.e.,
+        press the brake pedal) or as a fraction (0 <= decel <= 1) of
+        max deceleration. Note that deceleration is negative.
+        """
+
+        max_decel = self.properties["max_decel"]
+        if units == fraction and decel >= 0:
+            new_decel = decel * max_decel
+        #elif decel 
 
     def update_state(self, time_step): 
         position = self.state["position"]
