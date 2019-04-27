@@ -142,10 +142,10 @@ class Car:
         c_ft = 20
         c_rt = 20
 
-         """
-         The matrices and vectors below are based on the solution
-         vector {y_c, phi, y_f, y_r}. As a numpy array:
-         np.array([
+        """
+        The matrices and vectors below are based on the solution
+        vector {y_c, phi, y_f, y_r}. As a numpy array:
+        np.array([
             [y_c],
             [phi],
             [y_f],
