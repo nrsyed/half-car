@@ -4,8 +4,8 @@ import numpy as np
 
 class Road:
     def __init__(
-        self, length, resolution, mode="flat", amplitude=0.3, frequency=0.04,
-        step_onset=3
+        self, length, resolution=300, mode="flat", amplitude=0.3,
+        frequency=0.04, step_onset=3
     ):
 
         """
