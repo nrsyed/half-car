@@ -16,7 +16,7 @@ class Road:
         num_points = int(length * resolution)
 
         self.x_coords = np.linspace(0, length, num_points)
-        self.z_coords = deque(np.zeros((num_points,)), maxlen=num_points)
+        self.y_coords = deque(np.zeros((num_points,)), maxlen=num_points)
         self.resolution = resolution
         self.mode = mode
         self.num_points = num_points
@@ -35,7 +35,7 @@ class Road:
             num_new_points = 1
 
         for i in range(num_new_points):
-            self.z_coords.popleft()
+            self.y_coords.popleft()
 
             if self.mode == "sine":
                 next_point = (self.amplitude * math.sin(
@@ -46,6 +46,6 @@ class Road:
                 next_point = 0
             #TODO: other modes
 
-            self.z_coords.append(next_point)
+            self.y_coords.append(next_point)
         self.distance += length_to_generate
-        return self.z_coords
+        return self.y_coords
