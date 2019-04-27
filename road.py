@@ -1,46 +1,51 @@
+from collections import deque
+import math
+import numpy as np
+
 class Road:
-    def __init__(self, resolution, mode="flat"):
+    def __init__(
+        self, length, resolution, mode="flat", amplitude=0.3, frequency=0.04,
+        step_onset=3
+    ):
+
+        """
+        length: amount of road (meters)
+        resolution: points per meter
+        """
+
+        num_points = int(length * resolution)
+
+        self.x_coords = np.linspace(0, length, num_points)
+        self.z_coords = deque(np.zeros((num_points,)), maxlen=num_points)
         self.resolution = resolution
         self.mode = mode
+        self.num_points = num_points
+        self.distance = 0
 
-    def 
+        self.amplitude = amplitude
+        self.frequency = frequency
+        self.step_onset = step_onset
 
-    def __iter__(self):
-        return self
+    def generate(self, length_to_generate):
+        num_new_points = int(length_to_generate * self.resolution)
 
-    def __next__(self):
-        return None
+        # If a nonzero length_to_generate is requested but num_new_points
+        # rounds to zero, generate at least one point.
+        if length_to_generate > 0 and num_new_points == 0:
+            num_new_points = 1
 
+        for i in range(num_new_points):
+            self.z_coords.popleft()
 
-"""
-roadDatum = car.lowestPoint - car.groundClearance
-roadResolution = 300    # points per meter
-numRoadPoints = int((xLimits[1] - xLimits[0]) * roadResolution)
-xRoad = np.linspace(xLimits[0], xLimits[1], numRoadPoints)
-zRoad = deque(roadDatum * np.ones((numRoadPoints,)), maxlen=numRoadPoints)
-road, = ax.plot(xRoad, zRoad, c='brown', lw=1.5)
-roadMarker, = ax.plot(xLimits[1], -.75, c='brown', marker='^')
+            if self.mode == "sine":
+                next_point = (self.amplitude * math.sin(
+                    self.frequency * (self.distance + (i / self.resolution))
+                                                       )
+                )
+            elif self.mode == "flat":
+                next_point = 0
+            #TODO: other modes
 
-def generate_road(lastDistance, distanceSinceLast):
-    global roadResolution, zRoad, roadDatum, roadType
-    numNewPoints = int(distanceSinceLast * roadResolution)
-    if distanceSinceLast > 0 and numNewPoints == 0: numNewPoints = 1
-    for i in range(numNewPoints):
-        zRoad.popleft()
-        if roadType == 'sine':
-            nextPoint = roadDatum + 0.30*math.sin(
-                0.04*(lastDistance + (i / roadResolution)))
-        elif roadType == 'step':
-            if lastDistance > 3:
-                nextPoint = roadDatum + 0.20
-            else:
-                nextPoint = roadDatum
-        elif roadType == 'flat':
-            nextPoint = roadDatum
-        elif roadType == 'square':
-            if int(car.distTraveled) % 20 < 10:
-                nextPoint = roadDatum + 0.025
-            else:
-                nextPoint = roadDatum
-        zRoad.append(nextPoint)
-"""
+            self.z_coords.append(next_point)
+        self.distance += length_to_generate
+        return self.z_coords
