@@ -1,9 +1,12 @@
 from car import Car
+from plot_sim import PlotSim
 
 
 def simulate(time_step=0.0002):
     car = Car()
     elapsed_time = 0
+    plot = PlotSim(car)
+    exit()
 
     while True:
         ######################################################################
