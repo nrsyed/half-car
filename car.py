@@ -19,7 +19,10 @@ def arc(x=0, y=0, r=1, theta1=0, theta2=PI, resolution=180):
 
 
 class Car:
-    def __init__(self):
+    def __init__(self, road_func=None):
+        """
+        TODO: add all parameters as arguments.
+        """
 
         # Develop the profile of the vehicle chassis. All dimensions are in
         # meters. A number of dimensions were either obtained empirically
@@ -236,7 +239,7 @@ class Car:
             "road_stiffness_matrix": road_stiffness_matrix,
             "road_damping_matrix": road_damping_matrix,
             "max_speed": max_speed,
-            "max_accel": max_accel,
+            "max_accel": max_accel,     # TODO: use max accel/decel
             "max_decel": max_decel
         }
 
@@ -252,6 +255,7 @@ class Car:
             "distance_traveled": 0
         }
 
+        self.road_func = road_func
 
     # TODO: allow independent gas and brake, fix gas and brake.
 
@@ -306,28 +310,52 @@ class Car:
     def update_state(self, time_step): 
         position = self.state["position"]
         velocity = self.state["velocity"]
-        accel = self.state["accel"]
         road_position = self.state["road_position"]
         road_velocity = self.state["road_velocity"]
+        horizontal_velocity = self.state["horizontal_velocity"]
+        horizontal_accel = self.state["horizontal_accel"]
 
-        # TODO
+        stiffness_matrix = self.properties["stiffness_matrix"]
+        damping_matrix = self.properties["damping_matrix"]
+        road_stiffness_matrix = self.properties["road_stiffness_matrix"]
+        road_damping_matrix = self.properties["road_damping_matrix"]
 
+        accel = (
+              (stiffness_matrix @ position)
+            + (damping_matrix @ velocity)
+            + (road_stiffness_matrix @ road_position)
+            + (road_damping_matrix @ road_velocity)
+            + (self.normal_force_vector)
+        )
 
-        """
-        car.accelerationVector = (car.stiffnessMatrix.dot(car.positionVector)
-            + car.dampingMatrix.dot(car.velocityVector)
-            + car.roadStiffnessMatrix.dot(car.roadPositionVector)
-            + car.roadDampingMatrix.dot(car.roadVelocityVector)
-            + car.normal_force_vector())
+        # Before updating displacements and velocities, clamp pitch angle
+        # phi to +/- 5 degrees. If |phi| > 5 deg, set phi to +/- 5 deg and
+        # set phi_dot, i.e., angular velocity (second component of the vehicle
+        # velocity vector) to 0.
+        if abs(position[1]) > math.radians(5):
+            velocity[1] = 0
+            if position[1] > 0:
+                position[1] = math.radians(5)
+            else:
+                position[1] = math.radians(-5)
 
-        # Clamp pitch angle to +/- 5 deg.
-        if car.positionVector[1] > math.radians(5):
-            car.positionVector[1] = math.radians(5)
-            car.velocityVector[1] = 0
-        elif car.positionVector[1] < math.radians(-5):
-            car.positionVector[1] = math.radians(-5)
-            car.velocityVector[1] = 0
-        """
+        # Update displacements and velocities.
+        position += velocity * time_step
+        velocity += accel * time_step
+
+        # Before computing distance traveled during the current update step,
+        # check if max or min speed have been exceeded. Note that reversing
+        # is not currently supported.
+        max_speed = self.properties["max_speed"]
+        if horizontal_velocity >= max_speed and horizontal_accel > 0:
+            horizontal_velocity = max_speed
+            horizontal_accel = 0
+        elif horizontal_velocity < 0:
+            horizontal_velocity = 0
+            horizontal_accel = 0
+
+        # Compute distance traveled during the current update step.
+        curr_step_distance = horizontal_velocity * time_step
 
     @property
     def normal_force_vector(self):
