@@ -2,12 +2,12 @@ from car import Car
 from plot_sim import PlotSim
 
 
-def simulate(time_step=0.0002):
-    car = Car()
-    elapsed_time = 0
-    plot = PlotSim(car)
-    exit()
+def simulate(car, time_step=0.0002):
+    """
+    TODO
+    """
 
+    elapsed_time = 0
     while True:
         ######################################################################
         ######################################################################
@@ -16,7 +16,7 @@ def simulate(time_step=0.0002):
             car.set_accel(4)
         elif 2 <= elapsed_time < 4:
             car.set_accel(-5)
-        elif 4 <= elapsed_time <= 5:
+        elif 4 <= elapsed_time <= 10:
             car.set_accel(4)
         else:
             break
@@ -26,6 +26,11 @@ def simulate(time_step=0.0002):
         car.update_state(time_step)
         elapsed_time += time_step
 
+        yield elapsed_time
+
 
 if __name__ == "__main__":
-    simulate()
+    car = Car()
+    plot_sim = PlotSim(car, update_interval=10)
+    sim_gen = simulate(car, time_step=0.002)
+    plot_sim.animate(sim_gen)

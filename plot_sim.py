@@ -1,10 +1,17 @@
+import math
+import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from matplotlib import animation
+import numpy as np
 
 class PlotSim:
-    def __init__(self, car, suspension=False):
+    def __init__(self, car, suspension=False, update_interval=1):
         """
         TODO
+
+        :param update_interval: How frequently to update the animation figure.
+            If 1, every frame. If 2, every other frame, and so on.
+        :type update_interval: int
         """
 
         fig, ax = plt.subplots()
@@ -92,4 +99,81 @@ class PlotSim:
 
         # lines["road_marker"], = TODO
 
+        self.fig = fig
+        self.ax = ax
+        self.lines = lines
+        self.car = car
+        self.road_datum = road_datum
+        self.wheel_datum = wheel_datum
+        self.update_interval = update_interval
+        self.iteration = 0
+
+    @staticmethod
+    def get_transformation_matrix(angle, x_offset, y_offset):
+        return np.array([
+            [math.cos(angle), -math.sin(angle), x_offset],
+            [math.sin(angle), math.cos(angle), y_offset],
+            [0, 0, 1]
+        ])
+
+    def update_animation(self, elapsed_time):
+        """
+        TODO
+        """
+
+        if self.iteration % self.update_interval != 0:
+            self.iteration += 1
+            return
+
+        # Set line data based on car state.
+        car = self.car
+        wheel_datum = self.wheel_datum
+        l_f, l_r = car.properties["l_f"], car.properties["l_r"]
+        hub_radius = car.appearance["hub_radius"]
+        y_c, phi, y_f, y_r = car.state["position"][:,0]
+
+        transformation_matrix = self.get_transformation_matrix(phi, 0, y_c)
+        chassis = car.appearance["chassis"]
+        transformed_chassis = transformation_matrix @ chassis
+        self.lines["chassis"].set_data(
+            transformed_chassis[0,:], transformed_chassis[1,:]
+        )
+
+        self.lines["cog"].set_ydata(y_c)
+        self.lines["front_tire"].set_ydata(
+            car.appearance["wheel"][1,:] + wheel_datum + y_f
+        )
+        self.lines["front_hub"].set_ydata(
+            car.appearance["hub"][1,:] + wheel_datum + y_f
+        )
+        self.lines["rear_tire"].set_ydata(
+            car.appearance["wheel"][1,:] + wheel_datum + y_r
+        )
+        self.lines["rear_hub"].set_ydata(
+            car.appearance["hub"][1,:] + wheel_datum + y_r
+        )
+
+        wheel_angle = (
+            car.state["distance_traveled"] / car.appearance["wheel_radius"]
+        )
+
+        self.lines["front_marker"].set_data(
+            [l_f, l_f + hub_radius * math.cos(-wheel_angle)],
+            [wheel_datum + y_f, wheel_datum + y_f + hub_radius * math.sin(-wheel_angle)]
+        )
+
+        self.lines["rear_marker"].set_data(
+            [-l_r, -l_r + hub_radius * math.cos(-wheel_angle)],
+            [wheel_datum + y_r, wheel_datum + y_r + hub_radius * math.sin(-wheel_angle)]
+        )
+
+        self.lines["road"].set_ydata(car.road_profile[1] + self.road_datum)
+
+        self.iteration += 1
+
+    def animate(self, generator_func):
+        anim = matplotlib.animation.FuncAnimation(
+            self.fig, self.update_animation, frames=generator_func,
+            interval=1, repeat=False
+        )
         plt.show()
