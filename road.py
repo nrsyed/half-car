@@ -48,4 +48,16 @@ class Road:
 
             self.y_coords.append(next_point)
         self.distance += length_to_generate
-        return self.y_coords
+        return (self.x_coords, self.y_coords)
+
+    def __call__(self, length_to_generate=None):
+        """
+        TODO
+        If the class instance is called without an argument, the current road
+        profile (x_coords, y_coords) is returned. Otherwise, this method acts
+        as a wrapper for `Road.generate()`.
+        """
+        if length_to_generate:
+            return self.generate(length_to_generate)
+        else:
+            return (self.x_coords, self.y_coords)
