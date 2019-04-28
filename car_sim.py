@@ -1,5 +1,4 @@
 from car import Car
-from road import Road
 
 
 def simulate(time_step=0.0002):

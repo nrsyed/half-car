@@ -2,6 +2,7 @@ import math
 import numpy as np
 import scipy
 from scipy import interpolate
+from road import Road
 
 
 PI = math.pi
