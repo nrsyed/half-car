@@ -257,19 +257,18 @@ class Car:
             "distance_traveled": 0
         }
 
-        self.road_func = road_func
-        self.road_profile = None
-        if self.road_func:
-            self.road_profile = self.road_func()
+        # Initialize Road object. Because the car COG is centered at x = 0,
+        # the road must extend left past the rear wheel point of contact
+        # (x = -l_r) and right past the front wheel point of contact (x = l_f).
+        # Choose road limits (road_x_min, road_x_max) accordingly.
+        road_limits = (-2 * l_r, 2 * l_f)
+        road_length = road_limits[1] - road_limits[0]
+        road = Road(x_min=road_limits[0], length=road_length)
 
-
-    def set_road_func(self, road_func):
-        """
-        Set road generation function.
-        TODO
-        """
-
-        self.road_func = road_func
+        # The Road object is a callable and acts like a road generation
+        # function. However, this could be replaced by a custom function
+        # or callable with the same interface.
+        self.road_func = road
         self.road_profile = self.road_func()
 
 
