@@ -1,5 +1,7 @@
 import math
 import numpy as np
+import scipy
+from scipy import interpolate
 
 
 PI = math.pi
@@ -256,6 +258,20 @@ class Car:
         }
 
         self.road_func = road_func
+        self.road_profile = None
+        if self.road_func:
+            self.road_profile = self.road_func()
+
+
+    def set_road_func(self, road_func):
+        """
+        Set road generation function.
+        TODO
+        """
+
+        self.road_func = road_func
+        self.road_profile = self.road_func()
+
 
     # TODO: allow independent gas and brake, fix gas and brake.
 
@@ -354,8 +370,36 @@ class Car:
             horizontal_velocity = 0
             horizontal_accel = 0
 
-        # Compute distance traveled during the current update step.
+        # Update horizontal velocity.
+        horizontal_velocity += horizontal_accel * time_step
+
+        # Compute distance traveled during the current update step, and update
+        # the total distance traveled.
         curr_step_distance = horizontal_velocity * time_step
+        self.state["distance_traveled"] += curr_step_distance
+
+        # Call `road_func` to generate the appropriate amount of road and get
+        # the road profile for the current stretch of road (corresponding to
+        # the current update step).
+        road_x_coords, road_y_coords = self.road_func(curr_step_distance)
+
+        # Since road_x_coords probably won't coincide exactly with the road
+        # contact points at ``x = -l_r`` and ``x = l_f``, use a simple
+        # interpolation to obtain the road height at each contact point.
+        l_f, l_r = self.properties["l_f"], self.properties["l_r"]
+        interpolation = scipy.interpolate.interp1d(road_x_coords, road_y_coords)
+        updated_road_position = interpolation([l_f, -l_r]).reshape(2, 1)
+        road_velocity = updated_road_position - road_position
+        road_position = updated_road_position
+
+        # Propagate state updates to class instance state dictionary.
+        self.state["position"] = position
+        self.state["velocity"] = velocity
+        self.state["road_position"] = road_position
+        self.state["road_velocity"] = road_velocity
+        self.state["horizontal_velocity"] = horizontal_velocity
+        self.state["horizontal_accel"] = horizontal_accel
+
 
     @property
     def normal_force_vector(self):
