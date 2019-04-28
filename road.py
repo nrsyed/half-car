@@ -5,7 +5,7 @@ import numpy as np
 class Road:
     def __init__(
         self, length, resolution=300, mode="flat", amplitude=0.3,
-        frequency=0.04, step_onset=3
+        frequency=0.04, step_onset=3, x_min=None
     ):
 
         """
@@ -15,7 +15,11 @@ class Road:
 
         num_points = int(length * resolution)
 
-        self.x_coords = np.linspace(0, length, num_points)
+        if x_min == None:
+            x_min = 0
+        x_max = x_min + length
+
+        self.x_coords = np.linspace(x_min, x_max, num_points)
         self.y_coords = deque(np.zeros((num_points,)), maxlen=num_points)
         self.resolution = resolution
         self.mode = mode
