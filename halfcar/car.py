@@ -2,23 +2,12 @@ import math
 import numpy as np
 import scipy
 from scipy import interpolate
+
 from road import Road
+from shapeutil import arc
 
 
 PI = math.pi
-
-
-def arc(x=0, y=0, r=1, theta1=0, theta2=PI, resolution=180):
-    #TODO: revisit docstrings
-    """
-    Returns x and y coords (row 0 and row 1, respectively)
-    of arc. "resolution" = number of points per 2*PI rads.
-    Input arguments x and y refer to centerpoint of arc.
-    """
-
-    thetas = np.linspace(theta1, theta2,
-        int(abs(theta2 - theta1) * (resolution / (2*PI))))
-    return np.vstack((x + r*np.cos(thetas), y + r*np.sin(thetas)))
 
 
 class Car:
@@ -42,14 +31,24 @@ class Car:
         well_radius = 0.38
 
         front_well_center = -0.358914
-        chassis = arc(x=front_well_center, y=well_center_height,
-            r=well_radius, theta1=math.radians(-19.18),
-            theta2=math.radians(200.96))
+        chassis = arc(
+            center=(front_well_center, well_center_height),
+            radius=well_radius, theta1=math.radians(-19.18),
+            theta2=math.radians(200.96)
+        )
 
         rear_well_center = front_well_center - wheelbase
-        chassis = np.concatenate((chassis,
-            arc(x=rear_well_center, y=well_center_height, r=well_radius,
-            theta1=math.radians(-19.18), theta2=math.radians(194.3))), axis=1)
+        chassis = np.concatenate(
+            (
+                chassis,
+                arc(
+                    center=(rear_well_center, well_center_height),
+                    radius=well_radius, theta1=math.radians(-19.18),
+                    theta2=math.radians(194.3)
+                )
+            ),
+            axis=1
+        )
 
         # The remaining chassis profile is developed by traveling from the left
         # corner of the rear wheel well clockwise until arriving at the right
@@ -126,8 +125,8 @@ class Car:
         tire_height = tire_aspect * tire_width
         hub_radius = 0.5 * hub_diameter
         wheel_radius = hub_radius + tire_height
-        wheel = arc(r=wheel_radius, theta2=2*PI)
-        hub = arc(r=hub_radius, theta2=2*PI)
+        wheel = arc(radius=wheel_radius, theta2=2*PI)
+        hub = arc(radius=hub_radius, theta2=2*PI)
 
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350
