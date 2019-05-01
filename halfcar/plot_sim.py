@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
 
-import shapeutil
+from .shapeutil import zigzag
 
 class PlotSim:
     def __init__(self, car, suspension=False, update_interval=1):
@@ -186,14 +186,14 @@ class PlotSim:
 
             num_spring_nodes = 10
             spring_width = 0.2
-            front_spring = shapeutil.zigzag(
+            front_spring = zigzag(
                 transformed_front_well_top[:2,:],
                 np.array([[l_f], [wheel_datum + y_f]]),
                 num_spring_nodes,
                 spring_width
             )
 
-            rear_spring = shapeutil.zigzag(
+            rear_spring = zigzag(
                 transformed_rear_well_top[:2,:],
                 np.array([[-l_r], [wheel_datum + y_r]]),
                 num_spring_nodes,

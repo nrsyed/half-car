@@ -3,8 +3,8 @@ import numpy as np
 import scipy
 from scipy import interpolate
 
-from road import Road
-import shapeutil
+from .road import Road
+from .shapeutil import arc
 
 
 PI = math.pi
@@ -31,7 +31,7 @@ class Car:
         well_radius = 0.38
 
         front_well_center = -0.358914
-        chassis = shapeutil.arc(
+        chassis = arc(
             center=(front_well_center, well_center_height),
             radius=well_radius, theta1=math.radians(-19.18),
             theta2=math.radians(200.96)
@@ -41,7 +41,7 @@ class Car:
         chassis = np.concatenate(
             (
                 chassis,
-                shapeutil.arc(
+                arc(
                     center=(rear_well_center, well_center_height),
                     radius=well_radius, theta1=math.radians(-19.18),
                     theta2=math.radians(194.3)
@@ -125,8 +125,8 @@ class Car:
         tire_height = tire_aspect * tire_width
         hub_radius = 0.5 * hub_diameter
         wheel_radius = hub_radius + tire_height
-        wheel = shapeutil.arc(radius=wheel_radius, theta2=2*PI)
-        hub = shapeutil.arc(radius=hub_radius, theta2=2*PI)
+        wheel = arc(radius=wheel_radius, theta2=2*PI)
+        hub = arc(radius=hub_radius, theta2=2*PI)
 
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350

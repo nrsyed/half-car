@@ -1,5 +1,4 @@
-from car import Car
-from plot_sim import PlotSim
+from halfcar import Car, PlotSim
 
 
 def simulate(car, time_step=0.0002):
