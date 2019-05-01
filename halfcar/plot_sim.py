@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
 
+import shapeutil
+
 class PlotSim:
     def __init__(self, car, suspension=False, update_interval=1):
         """
@@ -43,12 +45,20 @@ class PlotSim:
         # Initialize plot axis line objects and store in dict.
         lines = {}
 
-        # Chassis lines.
+        # Chassis and suspension lines.
         lines["chassis"], = ax.plot(
             chassis[0,:], chassis[1,:], c=chassis_color, lw=2
         )
         
         lines["cog"], = ax.plot(0, 0, c=chassis_color, marker="o")
+
+        lines["front_suspension"], = ax.plot(
+            [], [], c=chassis_color, lw=1, zorder=1
+        )
+
+        lines["rear_suspension"], = ax.plot(
+            [], [], c=chassis_color, lw=1, zorder=1
+        )
 
         # Front wheel lines.
         lines["front_tire"], = ax.plot(
@@ -80,13 +90,11 @@ class PlotSim:
             c=rear_wheel_color, lw=1
         )
 
-        # Suspension.
-        # TODO
-
         # Set axis limits and road lines.
         road_profile = car.road_profile
         x_limits = (car.road_profile[0][0], car.road_profile[0][-1])
         y_limits = (-2, 2)
+        ax.set_aspect("equal")
         ax.set_ylim(y_limits)
         ax.set_xlim(x_limits)
 
@@ -99,6 +107,7 @@ class PlotSim:
 
         # lines["road_marker"], = TODO
 
+        self.suspension = suspension
         self.fig = fig
         self.ax = ax
         self.lines = lines
@@ -168,6 +177,31 @@ class PlotSim:
         )
 
         self.lines["road"].set_ydata(car.road_profile[1] + self.road_datum)
+
+        if self.suspension:
+            front_well_top = car.appearance["front_well_top"]
+            rear_well_top = car.appearance["rear_well_top"]
+            transformed_front_well_top = transformation_matrix @ front_well_top
+            transformed_rear_well_top = transformation_matrix @ rear_well_top
+
+            num_spring_nodes = 10
+            spring_width = 0.2
+            front_spring = shapeutil.zigzag(
+                transformed_front_well_top[:2,:],
+                np.array([[l_f], [wheel_datum + y_f]]),
+                num_spring_nodes,
+                spring_width
+            )
+
+            rear_spring = shapeutil.zigzag(
+                transformed_rear_well_top[:2,:],
+                np.array([[-l_r], [wheel_datum + y_r]]),
+                num_spring_nodes,
+                spring_width
+            )
+
+            self.lines["front_suspension"].set_data(front_spring)
+            self.lines["rear_suspension"].set_data(rear_spring)
 
         self.iteration += 1
 

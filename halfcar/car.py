@@ -263,7 +263,7 @@ class Car:
         # Choose road limits (road_x_min, road_x_max) accordingly.
         road_limits = (-2 * l_r, 2 * l_f)
         road_length = road_limits[1] - road_limits[0]
-        road = Road(x_min=road_limits[0], length=road_length)
+        road = Road(x_min=road_limits[0], length=road_length, mode="sine")
 
         # The Road object is a callable and acts like a road generation
         # function. However, this could be replaced by a custom function

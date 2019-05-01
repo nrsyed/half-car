@@ -31,6 +31,6 @@ def simulate(car, time_step=0.0002):
 
 if __name__ == "__main__":
     car = Car()
-    plot_sim = PlotSim(car, update_interval=10)
-    sim_gen = simulate(car, time_step=0.002)
+    plot_sim = PlotSim(car, update_interval=100, suspension=True)
+    sim_gen = simulate(car, time_step=0.0002)
     plot_sim.animate(sim_gen)
