@@ -76,42 +76,41 @@ class Car:
         # Add the first point to the end of the array to complete the loop.
         chassis = np.append(chassis, chassis[:, [0]], axis=1)
 
-        # Add a third row of arbitrary values to the coordinates to make it
-        # three-dimensional, allowing the use of 3D transformation matrices
-        # and "3D-proofing" the implementation of the vehicle's appearance.
+        # Add a homogeneous coordinate, i.e., a third row of ones, to allow
+        # multiplication with transformation matrix.
         chassis = np.vstack(
-            (chassis, np.zeros((chassis.shape[1])))
+            (chassis, np.ones((chassis.shape[1])))
         )
 
         # Set the vehicle COG and shift chassis such that the COG is at
-        # (0, 0, 0). This simplifies things later.
+        # (0, 0). This simplifies things later.
         l_f = 0.4 * wheelbase
         l_r = 0.6 * wheelbase
 
         vehicle_COG = np.array([
             [rear_well_center + l_r],
             [0.4064],
-            [0]
+            [1]
         ])
 
-        chassis -= vehicle_COG
+        chassis[:2,:] -= vehicle_COG[:2,:]
 
         # Similarly shift all wheel well coordinates and get wheel well position
         # vectors in the same coordinate reference frame as chassis.
         front_well_center = np.array([
             [front_well_center],
             [well_center_height],
-            [0]
+            [1]
         ])
 
         rear_well_center = np.array([
             [rear_well_center],
             [well_center_height],
-            [0]
+            [1]
         ])
 
-        front_well_center -= vehicle_COG
-        rear_well_center -= vehicle_COG
+        front_well_center[:2,:] -= vehicle_COG[:2,:]
+        rear_well_center[:2,:] -= vehicle_COG[:2,:]
 
         front_well_top = front_well_center + np.array([[0], [well_radius], [0]])
         rear_well_top = rear_well_center + np.array([[0], [well_radius], [0]])
@@ -136,8 +135,7 @@ class Car:
         I_zz = 2500
         m = m_c + m_f + m_r
 
-        #k_fs = 80000
-        k_fs = 90000
+        k_fs = 80000
         #k_rs = (l_r / l_f) * k_fs
         k_rs = 1.1 * k_fs
         k_ft = 150000
@@ -264,6 +262,7 @@ class Car:
         # Choose road limits (road_x_min, road_x_max) accordingly.
         road_limits = (-2 * l_r, 2 * l_f)
         road_length = road_limits[1] - road_limits[0]
+        #road = Road(x_min=road_limits[0], length=road_length, mode="flat")
         road = Road(x_min=road_limits[0], length=road_length, mode="sine")
 
         # The Road object is a callable and acts like a road generation
