@@ -6,6 +6,7 @@ import numpy as np
 
 from .shapeutil import zigzag
 
+
 class PlotSim:
     def __init__(self, car, suspension=False, update_interval=1):
         """
@@ -107,15 +108,47 @@ class PlotSim:
 
         # lines["road_marker"], = TODO
 
+        # Information display text annotations.
+        annotations = {}
+        annotations["time"] = ax.annotate(
+            "", xy=(0.01, 0.02), xycoords="axes fraction"
+        )
+        annotations["brake"] = ax.annotate(
+            "", xy=(0.2, 0.18), xycoords="axes fraction", color="r"
+        )
+        annotations["accel"] = ax.annotate(
+            "", xy=(0.2, 0.14), xycoords="axes fraction"
+        )
+        annotations["speed"] = ax.annotate(
+            "", xy=(0.2, 0.1), xycoords="axes fraction"
+        )
+        annotations["speed_kph"] = ax.annotate(
+            "", xy=(0.267, 0.06), xycoords="axes fraction"
+        )
+        annotations["speed_mph"] = ax.annotate(
+            "", xy=(0.267, 0.02), xycoords="axes fraction"
+        )
+        annotations["dist"] = ax.annotate(
+            "", xy=(0.5, 0.1), xycoords="axes fraction"
+        )
+        annotations["dist_ft"] = ax.annotate(
+            "", xy=(0.664, 0.06), xycoords="axes fraction"
+        )
+        annotations["dist_mi"] = ax.annotate(
+            "", xy=(0.664, 0.02), xycoords="axes fraction"
+        )
+
         self.suspension = suspension
         self.fig = fig
         self.ax = ax
+        self.annotations = annotations
         self.lines = lines
         self.car = car
         self.road_datum = road_datum
         self.wheel_datum = wheel_datum
         self.update_interval = update_interval
         self.iteration = 0
+        
 
     @staticmethod
     def get_transformation_matrix(angle, x_offset, y_offset):
@@ -124,6 +157,7 @@ class PlotSim:
             [math.sin(angle), math.cos(angle), y_offset],
             [0, 0, 1]
         ])
+
 
     def update_animation(self, elapsed_time):
         """
@@ -143,7 +177,9 @@ class PlotSim:
 
         transformation_matrix = self.get_transformation_matrix(phi, 0, y_c)
         chassis = car.appearance["chassis"]
+
         transformed_chassis = transformation_matrix @ chassis
+
         self.lines["chassis"].set_data(
             transformed_chassis[0,:], transformed_chassis[1,:]
         )
@@ -203,7 +239,33 @@ class PlotSim:
             self.lines["front_suspension"].set_data(front_spring)
             self.lines["rear_suspension"].set_data(rear_spring)
 
+        # Update annotations.
+        self.annotations["time"].set_text("T = {:.2f} s".format(elapsed_time))
+        self.annotations["accel"].set_text(
+            "a =  {:.2f} m/s^2".format(car.state["horizontal_accel"])
+        )
+        self.annotations["speed"].set_text(
+            "v =  {:.2f} m/s".format(car.state["horizontal_velocity"])
+        )
+        self.annotations["speed_kph"].set_text(
+            "{:.1f} kph".format(car.state["horizontal_velocity"] * 3.6)
+        )
+        self.annotations["speed_mph"].set_text(
+            "{:.1f} mph".format(car.state["horizontal_velocity"] * 3.6 * 0.621)
+        )
+        self.annotations["dist"].set_text(
+            "Distance = {:.1f} m".format(car.state["distance_traveled"])
+        )
+        self.annotations["dist_ft"].set_text(
+            "{:.1f} ft".format(car.state["distance_traveled"] * 3.28)
+        )
+        self.annotations["dist_mi"].set_text(
+            "{:.2f} mi".format(car.state["distance_traveled"] * 3.28 / 5280)
+        )
+
         self.iteration += 1
+        return self.lines
+
 
     def animate(self, generator_func):
         anim = matplotlib.animation.FuncAnimation(
