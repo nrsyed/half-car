@@ -21,7 +21,7 @@ class Car:
         # or estimated from photographs. The "initial" coordinate system
         # is based on the vehicle facing right, with the positive x axis
         # extending to the right and the positive y axis extending up.
-        # x=0 is at the right corner of the front wheel well, and z=0 is at
+        # x=0 is at the right corner of the front wheel well, and y=0 is at
         # ground level.
         # TODO: pictures
         
