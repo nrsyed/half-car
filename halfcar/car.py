@@ -34,7 +34,7 @@ class Car:
         chassis = arc(
             center=(front_well_center, well_center_height),
             radius=well_radius, theta1=math.radians(-19.18),
-            theta2=math.radians(200.96)
+            theta2=math.radians(200.96), resolution=50
         )
 
         rear_well_center = front_well_center - wheelbase
@@ -44,7 +44,7 @@ class Car:
                 arc(
                     center=(rear_well_center, well_center_height),
                     radius=well_radius, theta1=math.radians(-19.18),
-                    theta2=math.radians(194.3)
+                    theta2=math.radians(194.3), resolution=50
                 )
             ),
             axis=1
@@ -124,8 +124,8 @@ class Car:
         tire_height = tire_aspect * tire_width
         hub_radius = 0.5 * hub_diameter
         wheel_radius = hub_radius + tire_height
-        wheel = arc(radius=wheel_radius, theta2=2*PI)
-        hub = arc(radius=hub_radius, theta2=2*PI)
+        wheel = arc(radius=wheel_radius, theta2=2*PI, resolution=50)
+        hub = arc(radius=hub_radius, theta2=2*PI, resolution=50)
 
         # Mass, inertia, stiffness, and damping properties.
         #m_c = 1350
