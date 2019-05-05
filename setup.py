@@ -10,7 +10,7 @@ setup(
     license="GPL",
     packages=["halfcar"],
     install_requires=[
-        "numpy==1.15.1",
+        "numpy",
         "scipy",
         "matplotlib"
     ]

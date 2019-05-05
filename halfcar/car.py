@@ -159,35 +159,39 @@ class Car:
 
         mass_vector = np.array([m_c, I_zz, m_f, m_r])
 
-        stiffness_matrix = (np.array([
+        stiffness_matrix = np.array([
             [-(k_fs + k_rs), l_r * k_rs - l_f * k_fs, k_fs, k_rs],
             [-(l_f * k_fs - l_r * k_rs), -(l_f**2 * k_fs + l_r**2 * k_rs),
                 l_f * k_fs, -l_r * k_rs],
             [k_fs, l_f * k_fs, -(k_fs + k_ft), 0],
-            [k_rs, -l_r * k_rs, 0, -(k_rs + k_rt)]])
-            / mass_vector[:, None])
+            [k_rs, -l_r * k_rs, 0, -(k_rs + k_rt)]
+        ])
+        stiffness_matrix = stiffness_matrix / mass_vector[:, None]
 
-        damping_matrix = (np.array([
+        damping_matrix = np.array([
             [-(c_fs + c_rs), l_r * c_rs - l_f * c_fs, c_fs, c_rs],
             [-(l_f * c_fs - l_r * c_rs), -(l_f**2 * c_fs + l_r**2 * c_rs),
                 l_f * c_fs, -l_r * c_rs],
             [c_fs, l_f * c_fs, -(c_fs + c_ft), 0],
-            [c_rs, -l_r * c_rs, 0, -(c_rs + c_rt)]])
-            / mass_vector[:, None])
+            [c_rs, -l_r * c_rs, 0, -(c_rs + c_rt)]
+        ])
+        damping_matrix = damping_matrix / mass_vector[:, None]
 
-        road_stiffness_matrix = (np.array([
+        road_stiffness_matrix = np.array([
             [0, 0],
             [0, 0],
             [k_ft, 0],
-            [0, k_rt]])
-            / mass_vector[:, None])
+            [0, k_rt]
+        ])
+        road_stiffness_matrix = road_stiffness_matrix / mass_vector[:, None]
 
-        road_damping_matrix = (np.array([
+        road_damping_matrix = np.array([
             [0, 0],
             [0, 0],
             [c_ft, 0],
-            [0, c_rt]])
-            / mass_vector[:, None])
+            [0, c_rt]
+        ])
+        road_damping_matrix = road_damping_matrix / mass_vector[:, None]
 
         # Compute baseline height of COG above front wheel point of contact.
         lowest_point = np.amin(chassis[1,:])
@@ -246,11 +250,11 @@ class Car:
 
         # Initialize state vectors and other variables.
         self.state = {
-            "position": np.zeros((4,1), dtype=np.float),
-            "velocity": np.zeros((4,1), dtype=np.float),
-            "accel": np.zeros((4,1), dtype=np.float),
-            "road_position": np.zeros((2,1), dtype=np.float),
-            "road_velocity": np.zeros((2,1), dtype=np.float),
+            "position": np.zeros((4,1)),
+            "velocity": np.zeros((4,1)),
+            "accel": np.zeros((4,1)),
+            "road_position": np.zeros((2,1)),
+            "road_velocity": np.zeros((2,1)),
             "horizontal_accel": 0,
             "horizontal_velocity": 0,
             "distance_traveled": 0
@@ -271,8 +275,6 @@ class Car:
         self.road_func = road
         self.road_profile = self.road_func()
 
-
-    # TODO: allow independent gas and brake, fix gas and brake.
 
     def set_accel(self, accel):
         """
@@ -321,6 +323,7 @@ class Car:
         if units == fraction and decel >= 0:
             new_decel = decel * max_decel
         #elif decel 
+
 
     def update_state(self, time_step): 
         position = self.state["position"]
@@ -412,15 +415,14 @@ class Car:
         # Obtain the height of the COG above the front wheel point of contact,
         # i.e., the height of the COG about the driving force vector (assuming
         # a front-wheel drive vehicle).
-        height = init_height + position[0] + position[2]
+        height = init_height + position[0].item() + position[2].item()
 
-        normal_force_vector = (np.array([
+        normal_force_vector = np.array([
             [0],
             [0],
             [height * m * horizontal_accel / wheelbase],
             [-height * m * horizontal_accel / wheelbase]
-            ])
-            / mass_vector[:, None]
-        )
+        ])
+        normal_force_vector = normal_force_vector / mass_vector[:, None]
 
         return normal_force_vector
