@@ -8,7 +8,7 @@ from .shapeutil import zigzag
 
 
 class PlotSim:
-    def __init__(self, car, suspension=False, update_interval=1):
+    def __init__(self, car, suspension=False):
         """
         TODO
 
@@ -146,7 +146,6 @@ class PlotSim:
         self.car = car
         self.road_datum = road_datum
         self.wheel_datum = wheel_datum
-        self.update_interval = update_interval
         self.iteration = 0
         
 
@@ -163,10 +162,6 @@ class PlotSim:
         """
         TODO
         """
-
-        if self.iteration % self.update_interval != 0:
-            self.iteration += 1
-            return
 
         # Set line data based on car state.
         car = self.car
@@ -262,9 +257,6 @@ class PlotSim:
         self.annotations["dist_mi"].set_text(
             "{:.2f} mi".format(car.state["distance_traveled"] * 3.28 / 5280)
         )
-
-        self.iteration += 1
-        return self.lines
 
 
     def animate(self, generator_func):
