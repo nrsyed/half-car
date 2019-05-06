@@ -338,6 +338,27 @@ class Car:
         road_stiffness_matrix = self.properties["road_stiffness_matrix"]
         road_damping_matrix = self.properties["road_damping_matrix"]
 
+        # Check if max or min speed have been exceeded. Note that reversing
+        # is not currently supported.
+        max_speed = self.properties["max_speed"]
+        if horizontal_velocity >= max_speed and horizontal_accel > 0:
+            horizontal_velocity = max_speed
+            horizontal_accel = 0
+        elif (horizontal_velocity < 0
+            or horizontal_velocity <= 0 and horizontal_velocity < 0
+        ):
+            horizontal_velocity = 0
+            horizontal_accel = 0
+
+        # Update horizontal velocity.
+        horizontal_velocity += horizontal_accel * time_step
+
+        # Propagate horizontal velocity and acceleration to state dictionary.
+        # Doing this before computing vehicle acceleration vector below ensures
+        # that the normal force vector is computed properly.
+        self.state["horizontal_velocity"] = horizontal_velocity
+        self.state["horizontal_accel"] = horizontal_accel
+
         accel = (
               (stiffness_matrix @ position)
             + (damping_matrix @ velocity)
@@ -360,20 +381,6 @@ class Car:
         # Update displacements and velocities.
         position += velocity * time_step
         velocity += accel * time_step
-
-        # Before computing distance traveled during the current update step,
-        # check if max or min speed have been exceeded. Note that reversing
-        # is not currently supported.
-        max_speed = self.properties["max_speed"]
-        if horizontal_velocity >= max_speed and horizontal_accel > 0:
-            horizontal_velocity = max_speed
-            horizontal_accel = 0
-        elif horizontal_velocity < 0:
-            horizontal_velocity = 0
-            horizontal_accel = 0
-
-        # Update horizontal velocity.
-        horizontal_velocity += horizontal_accel * time_step
 
         # Compute distance traveled during the current update step, and update
         # the total distance traveled.
@@ -399,8 +406,6 @@ class Car:
         self.state["velocity"] = velocity
         self.state["road_position"] = road_position
         self.state["road_velocity"] = road_velocity
-        self.state["horizontal_velocity"] = horizontal_velocity
-        self.state["horizontal_accel"] = horizontal_accel
 
 
     @property
