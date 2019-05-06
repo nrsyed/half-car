@@ -345,7 +345,7 @@ class Car:
             horizontal_velocity = max_speed
             horizontal_accel = 0
         elif (horizontal_velocity < 0
-            or horizontal_velocity <= 0 and horizontal_velocity < 0
+            or horizontal_velocity <= 0 and horizontal_accel < 0
         ):
             horizontal_velocity = 0
             horizontal_accel = 0
