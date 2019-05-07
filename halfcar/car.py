@@ -264,7 +264,7 @@ class Car:
         # the road must extend left past the rear wheel point of contact
         # (x = -l_r) and right past the front wheel point of contact (x = l_f).
         # Choose road limits (road_x_min, road_x_max) accordingly.
-        road_limits = (-2 * l_r, 2 * l_f)
+        road_limits = (-2 * l_r, 2.5 * l_f)
         road_length = road_limits[1] - road_limits[0]
         #road = Road(x_min=road_limits[0], length=road_length, mode="flat")
         road = Road(x_min=road_limits[0], length=road_length, mode="sine")
@@ -396,8 +396,8 @@ class Car:
         # contact points at ``x = -l_r`` and ``x = l_f``, use a simple
         # interpolation to obtain the road height at each contact point.
         l_f, l_r = self.properties["l_f"], self.properties["l_r"]
-        interpolation = scipy.interpolate.interp1d(road_x_coords, road_y_coords)
-        updated_road_position = interpolation([l_f, -l_r]).reshape(2, 1)
+        road_interpolation = scipy.interpolate.interp1d(road_x_coords, road_y_coords)
+        updated_road_position = road_interpolation([l_f, -l_r]).reshape(2, 1)
         road_velocity = updated_road_position - road_position
         road_position = updated_road_position
 

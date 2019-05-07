@@ -3,18 +3,24 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
+import scipy
+from scipy import interpolate
 
 from .shapeutil import zigzag
 
 
 class PlotSim:
-    def __init__(self, car, suspension=False):
+    def __init__(
+        self, car, suspension=False, road_marker_interval=0,
+        road_marker_vertical_offset=0.25
+    ):
         """
         TODO
 
-        :param update_interval: How frequently to update the animation figure.
-            If 1, every frame. If 2, every other frame, and so on.
-        :type update_interval: int
+        :param road_marker_interval: distance between road markers in meters.
+            Must be larger than the x span of the road profile (since only
+            one road marker can currently be displayed on the plot at a time).
+        :type road_marker_interval: int
         """
 
         fig, ax = plt.subplots()
@@ -106,7 +112,12 @@ class PlotSim:
             road_profile[0], road_profile[1] + road_datum, c=road_color, lw=1.5
         )
 
-        # lines["road_marker"], = TODO
+        # Ensure `road_marker_interval` is an int greater than the x span of the plot.
+        road_marker_interval = max(int(road_marker_interval), math.ceil(x_limits[1] - x_limits[0]))
+        lines["road_marker"], = ax.plot(
+            road_profile[0][-1], road_datum - road_marker_vertical_offset,
+            c=road_color, marker="^"
+        )
 
         # Information display text annotations.
         annotations = {}
@@ -145,6 +156,8 @@ class PlotSim:
         self.lines = lines
         self.car = car
         self.road_datum = road_datum
+        self.road_marker_interval = road_marker_interval
+        self.road_marker_vertical_offset = road_marker_vertical_offset
         self.wheel_datum = wheel_datum
         self.iteration = 0
         
@@ -208,6 +221,25 @@ class PlotSim:
         )
 
         self.lines["road"].set_ydata(car.road_profile[1] + self.road_datum)
+
+        road_x_limits = (car.road_profile[0][0], car.road_profile[0][-1])
+        road_marker_x = (
+            road_x_limits[1]
+            - (car.state["distance_traveled"] % self.road_marker_interval)
+        )
+        
+        # Use an interpolation to get the height of the road at the road
+        # marker x coordinate, then set the y coordinate of the road
+        # marker accordingly.
+        road_interpolation = scipy.interpolate.interp1d(
+            car.road_profile[0], car.road_profile[1], bounds_error=False
+        )
+        road_marker_y = (
+            self.road_datum
+            + road_interpolation(road_marker_x)
+            - self.road_marker_vertical_offset
+        )
+        self.lines["road_marker"].set_data(road_marker_x, road_marker_y)
 
         if self.suspension:
             front_well_top = car.appearance["front_well_top"]
