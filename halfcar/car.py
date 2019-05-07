@@ -276,14 +276,14 @@ class Car:
         self.road_profile = self.road_func()
 
 
-    def set_accel(self, accel):
+    def set_accel(self, accel, ignore_max=False):
         """
         Manually set car's horizontal acceleration in m/s^2.
         """
 
         max_accel = self.properties["max_accel"]
         max_decel = self.properties["max_decel"]
-        if max_decel <= accel <= max_accel:
+        if (ignore_max) or (max_decel <= accel <= max_accel):
             self.state["horizontal_accel"] = accel
 
 
