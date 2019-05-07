@@ -14,10 +14,14 @@ def simulate(car, time_step=0.0002, interval=1):
         ########### SET THE DESIRED SIMULATION PARAMETERS HERE ###############
         if 0 <= elapsed_time < 8:
             car.set_accel(4)
-        elif 8 <= elapsed_time < 14:
+        elif 8 <= elapsed_time < 11:
             car.set_accel(-9)
-        elif 14 <= elapsed_time <= 16:
+        elif 11 <= elapsed_time < 16:
+            car.set_accel(4)
+        elif 16 <= elapsed_time < 20:
             car.set_accel(0)
+        elif 20 <= elapsed_time < 30:
+            car.set_accel(-4)
         else:
             break
         ######################################################################
