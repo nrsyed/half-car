@@ -135,9 +135,9 @@ class Car:
         I_zz = 2500
         m = m_c + m_f + m_r
 
-        k_fs = 80000
+        k_fs = 60000
         #k_rs = (l_r / l_f) * k_fs
-        k_rs = 1.1 * k_fs
+        k_rs = 0.9 * k_fs
         k_ft = 150000
         k_rt = 150000
 
