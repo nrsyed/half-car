@@ -124,7 +124,7 @@ class PlotSim:
         annotations["time"] = ax.annotate(
             "", xy=(0.01, 0.02), xycoords="axes fraction"
         )
-        annotations["brake"] = ax.annotate(
+        annotations["brake_max_speed"] = ax.annotate(
             "", xy=(0.2, 0.18), xycoords="axes fraction", color="r"
         )
         annotations["accel"] = ax.annotate(
@@ -289,6 +289,13 @@ class PlotSim:
         self.annotations["dist_mi"].set_text(
             "{:.2f} mi".format(car.state["distance_traveled"] * 3.28 / 5280)
         )
+
+        if car.state["horizontal_accel"] < 0:
+            self.annotations["brake_max_speed"].set_text("BRAKE")
+        elif car.state["horizontal_velocity"] == car.properties["max_speed"]:
+            self.annotations["brake_max_speed"].set_text("MAX SPEED")
+        else:
+            self.annotations["brake_max_speed"].set_text("")
 
 
     def animate(self, generator_func):
