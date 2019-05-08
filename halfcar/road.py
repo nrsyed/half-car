@@ -5,7 +5,7 @@ import numpy as np
 class Road:
     def __init__(
         self, length, resolution=300, mode="flat", amplitude=0.3,
-        frequency=0.04, step_onset=3, x_min=None
+        frequency=0.04, x_min=None
     ):
 
         """
@@ -28,7 +28,6 @@ class Road:
 
         self.amplitude = amplitude
         self.frequency = frequency
-        self.step_onset = step_onset
 
     def generate(self, length_to_generate):
         num_new_points = int(length_to_generate * self.resolution)
@@ -38,14 +37,23 @@ class Road:
         if length_to_generate > 0 and num_new_points == 0:
             num_new_points = 1
 
+        amplitude = self.amplitude
+        frequency = self.frequency
+        distance = self.distance
+        resolution = self.resolution
+
         for i in range(num_new_points):
             self.y_coords.popleft()
 
-            if self.mode == "sine":
-                next_point = (self.amplitude * math.sin(
-                    self.frequency * (self.distance + (i / self.resolution))
-                                                       )
-                )
+            if self.mode in ("sine", "square"):
+                sine_value = math.sin(frequency * (distance + (i / resolution)))
+                if self.mode == "sine":
+                    next_point = amplitude * sine_value
+                elif self.mode == "square":
+                    if sine_value >= 0:
+                        next_point = 0
+                    else:
+                        next_point = amplitude
             elif self.mode == "flat":
                 next_point = 0
             #TODO: other modes
