@@ -1,4 +1,7 @@
+from datetime import datetime
 import math
+import sys
+
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -298,9 +301,32 @@ class PlotSim:
             self.annotations["brake_max_speed"].set_text("")
 
 
-    def animate(self, generator_func):
+    def animate(
+        self, frame_generator, show_video=True,
+        write_video=False, video_filepath=None, writer="ffmpeg",
+        fps=50, writer_args=None, save_count=sys.maxsize
+    ):
+        """
+        TODO
+
+        Recommended VideoWriter settings:
+            writer = "ffmpeg", fps = 1 / (time_step * generator_interval),
+            writer_args = ["-vcodec", "h264"]
+        where generator_interval refers to the interval (if any) chosen for
+        the frame_generator function.
+        """
+
         anim = matplotlib.animation.FuncAnimation(
-            self.fig, self.update_animation, frames=generator_func,
-            interval=1, repeat=False
+            self.fig, self.update_animation, frames=frame_generator,
+            interval=1, repeat=False, save_count=save_count
         )
-        plt.show()
+
+        if write_video:
+            if video_filepath is None:
+                video_filepath = datetime.now().strftime("%Y%m%d%H%M%S_halfcar.mp4")
+            writer_class = animation.writers[writer]
+            writer_obj = writer_class(fps=fps, extra_args=writer_args)
+            anim.save(video_filepath, writer=writer_obj)
+
+        if show_video:
+            plt.show()
