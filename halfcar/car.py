@@ -11,10 +11,21 @@ PI = math.pi
 
 
 class Car:
-    def __init__(self, road_func=None):
+    def __init__(self, road_func=None, properties=None):
         """
-        TODO: add all parameters as arguments.
+        TODO
+
+        :param road_func: Function or callable that generates the road profile.
+        :type road_func: callable
+
+        :properties: Optional dict containing vehicle properties. If not
+            supplied, or if only some properties are supplied, default values
+            are used the for the properties not present.
+        :type properties: dict
         """
+
+        if properties is None:
+            properties = dict()
 
         # Develop the profile of the vehicle chassis. All dimensions are in
         # meters. A number of dimensions were either obtained empirically
@@ -128,23 +139,22 @@ class Car:
         hub = arc(radius=hub_radius, theta2=2*PI, resolution=50)
 
         # Mass, inertia, stiffness, and damping properties.
-        #m_c = 1350
-        m_c = 1600
-        m_f = 2 * 23
-        m_r = m_f
-        I_zz = 2500
+        m_c = properties.get("m_c", 1600)
+        m_f = properties.get("m_f", 2 * 23)
+        m_r = properties.get("m_r", m_f)
+        I_zz = properties.get("I_zz", 2500)
         m = m_c + m_f + m_r
 
-        k_fs = 60000
-        #k_rs = (l_r / l_f) * k_fs
-        k_rs = 0.9 * k_fs
-        k_ft = 150000
-        k_rt = 150000
+        k_fs = properties.get("k_fs", 60000)
+        #k_rs = properties.get("k_rs", (l_r / l_f) * k_fs)
+        k_rs = properties.get("k_rs", 0.9 * k_fs)
+        k_ft = properties.get("k_ft", 150000)
+        k_rt = properties.get("k_rt", 150000)
 
-        c_fs = 1000
-        c_rs = 1000
-        c_ft = 20
-        c_rt = 20
+        c_fs = properties.get("c_fs", 1000)
+        c_rs = properties.get("c_rs", 1000)
+        c_ft = properties.get("c_ft", 20)
+        c_rt = properties.get("c_rt", 20)
 
         """
         The matrices and vectors below are based on the solution
@@ -201,11 +211,11 @@ class Car:
         # Set vehicle max speed in m/s, and max horizontal acceleration and
         # max horizontal deceleration (braking) in m/s^2. Max acceleration is
         # roughly based on a 0-60 mph time of 6.2 s.
-        max_speed = 60
-        max_accel = 4.4
-        max_decel = -9.0
+        max_speed = kwargs.get("max_speed", 60)
+        max_accel = kwargs.get("max_accel", 4.4)
+        max_decel = kwargs.get("max_decel", -9.0)
 
-        # Store vehicle properties and appearance (coordinates) in dictionaries.
+        # 
         self.appearance = {
             "chassis": chassis,
             "front_well_center": front_well_center,
@@ -266,7 +276,6 @@ class Car:
         # Choose road limits (road_x_min, road_x_max) accordingly.
         road_limits = (-2 * l_r, 2.5 * l_f)
         road_length = road_limits[1] - road_limits[0]
-        #road = Road(x_min=road_limits[0], length=road_length, mode="flat")
         road = Road(x_min=road_limits[0], length=road_length, mode="sine")
 
         # The Road object is a callable and acts like a road generation
