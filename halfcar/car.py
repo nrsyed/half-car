@@ -211,9 +211,9 @@ class Car:
         # Set vehicle max speed in m/s, and max horizontal acceleration and
         # max horizontal deceleration (braking) in m/s^2. Max acceleration is
         # roughly based on a 0-60 mph time of 6.2 s.
-        max_speed = kwargs.get("max_speed", 60)
-        max_accel = kwargs.get("max_accel", 4.4)
-        max_decel = kwargs.get("max_decel", -9.0)
+        max_speed = properties.get("max_speed", 60)
+        max_accel = properties.get("max_accel", 4.4)
+        max_decel = properties.get("max_decel", -9.0)
 
         # 
         self.appearance = {
