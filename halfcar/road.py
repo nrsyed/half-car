@@ -64,6 +64,7 @@ class Road:
         :param length_to_generate: Distance traveled since last update.
         :type length_to_generate: float
 
+        :return: An array of x coordinates and an array of y coordinates.
         :rtype: (array_like, array_like)
         """
 
