@@ -37,7 +37,7 @@ as the pitch (angular displacement) of the chassis.
 In this case, the input (the road) must be evaluated at two points. The system
 and variables are shown below.
 
-<img src="doc/img/accord_vars2.jpg" width="80%" />
+<img src="doc/img/accord_vars2.jpg" width="70%" />
 
 To characterize the system dynamics, the normal forces on the wheels must also
 be taken into account, or more specifically, the change in the normal forces
