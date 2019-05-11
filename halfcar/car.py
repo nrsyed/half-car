@@ -11,7 +11,7 @@ PI = math.pi
 
 
 class Car:
-    def __init__(self, road_func=None, properties=None):
+    def __init__(self, road_func=None, properties=None, road_func=None):
         """
         TODO
 
@@ -22,6 +22,7 @@ class Car:
             supplied, or if only some properties are supplied, default values
             are used the for the properties not present.
         :type properties: dict
+
         """
 
         if properties is None:
@@ -254,7 +255,7 @@ class Car:
             "road_stiffness_matrix": road_stiffness_matrix,
             "road_damping_matrix": road_damping_matrix,
             "max_speed": max_speed,
-            "max_accel": max_accel,     # TODO: use max accel/decel
+            "max_accel": max_accel,
             "max_decel": max_decel
         }
 
@@ -270,18 +271,22 @@ class Car:
             "distance_traveled": 0
         }
 
-        # Initialize Road object. Because the car COG is centered at x = 0,
-        # the road must extend left past the rear wheel point of contact
-        # (x = -l_r) and right past the front wheel point of contact (x = l_f).
-        # Choose road limits (road_x_min, road_x_max) accordingly.
-        road_limits = (-2 * l_r, 2.5 * l_f)
-        road_length = road_limits[1] - road_limits[0]
-        road = Road(x_min=road_limits[0], length=road_length, mode="sine")
+        if road_func is None:
+            # Initialize Road object. Because the car COG is centered at x = 0,
+            # the road must extend left past the rear wheel point of contact
+            # (x = -l_r) and right past the front wheel point of contact
+            # (x = l_f). Choose road limits (road_x_min, road_x_max) accordingly.
+            road_limits = (-2 * l_r, 2.5 * l_f)
+            road_length = road_limits[1] - road_limits[0]
+            road = Road(x_min=road_limits[0], length=road_length, mode="sine")
+            self.road_func = road
+        else:
+            self.road_func = road_func
 
         # The Road object is a callable and acts like a road generation
         # function. However, this could be replaced by a custom function
-        # or callable with the same interface.
-        self.road_func = road
+        # or callable with the same interface. The first call should return
+        # the initial road profile.
         self.road_profile = self.road_func()
 
 
@@ -296,45 +301,20 @@ class Car:
             self.state["horizontal_accel"] = accel
 
 
-    def set_velocity(self, velocity):
+    def set_velocity(self, velocity, ignore_max=False):
         """
         Manually set car's horizontal velocity in m/s.
         """
 
-        if 0 <= velocity <= self.properties["max_speed"]:
+        if (ignore_max) or (0 <= velocity <= self.properties["max_speed"]):
             self.state["horizontal_velocity"] = velocity
 
 
-    def gas(self, accel, units="mps"):
-        """
-        Set the car's horizontal acceleration in m/s^2 (i.e.,
-        press the gas pedal) or as a fraction (0 <= accel <= 1) of
-        max acceleration.
-        """
-
-        max_accel = self.properties["max_accel"]
-        if accel >= 0:
-            if units == "fraction":
-                new_accel = accel * max_accel
-            else:
-                new_accel = accel
-            self.state["horizontal_accel"] = min(new_accel, max_accel)
-
-
-    def brake(self, decel, units="mps"):
-        """
-        Set the car's horizontal deceleration in m/s^2 (i.e.,
-        press the brake pedal) or as a fraction (0 <= decel <= 1) of
-        max deceleration. Note that deceleration is negative.
-        """
-
-        max_decel = self.properties["max_decel"]
-        if units == fraction and decel >= 0:
-            new_decel = decel * max_decel
-        #elif decel 
-
-
     def update_state(self, time_step): 
+        """
+        TODO
+        """
+
         position = self.state["position"]
         velocity = self.state["velocity"]
         road_position = self.state["road_position"]
@@ -419,6 +399,10 @@ class Car:
 
     @property
     def normal_force_vector(self):
+        """
+        TODO
+        """
+
         init_height = self.properties["init_height"]
         wheelbase = self.properties["wheelbase"]
         position = self.state["position"]
