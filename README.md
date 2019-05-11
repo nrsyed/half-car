@@ -1,9 +1,16 @@
 # Vehicle half-car suspension model
 
-TODO
-
 <a href="https://youtu.be/_CIp4ywYVUs"><img src="doc/img/result.gif"/></a><br>
 <a href="https://youtu.be/_CIp4ywYVUs">Watch video on YouTube</a>
+
+The `halfcar` package numerically solves the differential equations of motion
+of a half-car suspension model and animates the dynamics of a car with
+matplotlib. Though only the suspension struts (springs) are drawn in the video,
+each suspension element is modeled as a spring and damper. Similarly, both
+wheels are also modeled as spring-dampers; when the outline of the tire dips
+beneath the line representing the road, it means the tire is being compressed.
+
+## Quickstart
 
 ```
 git clone https://github.com/nrsyed/half-car.git
@@ -12,11 +19,22 @@ pip install -e .
 python example.py
 ```
 
+The example contains a generator function that iteratively passes a horizontal
+acceleration to the `Car` object and subsequently calls its  state update
+method. This type of generator function, which calls `Car.update_state()` and 
+yields the total time elapsed, is all that's necessary to animate the
+simulation via the `PlotSim` class, as shown in the example. Note that the
+simulation and animation are decoupled; the `Car` object can be manipulated
+and updated without creating a `PlotSim` object or animating anything, if
+desired.
+
 ## Background
 
 For a more detailed treatment of the theory, refer to 
 <a href="https://nrsyed.com/2018/01/07/numerical-approach-to-studying-vehicle-dynamics-with-a-half-car-suspension-model/">
-my original blog post</a>.
+my original blog post</a>. Also note that, in the code, for simplicity, all
+references to the coordinate *z* have been replaced with *y* (and the mass
+moment of inertia *I<sub>yy</sub>* with *I<sub>zz</sub>*).
 
 In the world of vehicle dynamics, a quarter-car suspension model considers a
 single wheel, modeling both the suspension shock/strut and the tire as a
