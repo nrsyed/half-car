@@ -84,8 +84,9 @@ class Road:
         for i in range(num_new_points):
             self.y_coords.popleft()
 
-            if self.mode in ("sine", "square"):
-                sine_value = math.sin(frequency * (distance + (i / resolution)))
+            if self.mode in ("sine", "square", "triagle", "bump"):
+                sin_arg = frequency * (distance + (i / resolution))
+                sine_value = math.sin(sin_arg)
                 if self.mode == "sine":
                     next_point = amplitude * sine_value
                 elif self.mode == "square":
@@ -93,6 +94,19 @@ class Road:
                         next_point = 0
                     else:
                         next_point = amplitude
+                elif self.mode in ("triagle", "bump"):
+                    # https://en.wikipedia.org/wiki/Sawtooth_wave
+                    wave_arg = sin_arg % (2 * math.pi)
+                    if self.mode == "bump":
+                        wave_arg *= 2
+                    if wave_arg <= math.pi:
+                        # Rising line
+                        next_point = amplitude * wave_arg / math.pi
+                    elif wave_arg <= 2 * math.pi:
+                        # Rising line
+                        next_point = amplitude * (2 * math.pi - wave_arg) / math.pi
+                    else:
+                        next_point = 0
             elif self.mode == "flat":
                 next_point = 0
 
