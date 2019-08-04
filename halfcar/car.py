@@ -11,7 +11,7 @@ PI = math.pi
 
 
 class Car:
-    def __init__(self, road_func=None, properties=None, road_func=None):
+    def __init__(self, road_func=None, properties=None):
         """
         TODO
 
