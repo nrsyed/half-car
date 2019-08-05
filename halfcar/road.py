@@ -23,7 +23,7 @@ class Road:
         :param resolution: Number of points per meter.
         :type resolution: int
 
-        :param mode: Road profile mode: "flat", "sine", "square".
+        :param mode: Road profile mode: "flat", "sine", "square", "triangle", "bump".
         :type mode: str
 
         :param amplitude: Amplitude of sine or square wave.
@@ -84,7 +84,7 @@ class Road:
         for i in range(num_new_points):
             self.y_coords.popleft()
 
-            if self.mode in ("sine", "square", "triagle", "bump"):
+            if self.mode in ("sine", "square", "triangle", "bump"):
                 sin_arg = frequency * (distance + (i / resolution))
                 sine_value = math.sin(sin_arg)
                 if self.mode == "sine":
@@ -94,7 +94,7 @@ class Road:
                         next_point = 0
                     else:
                         next_point = amplitude
-                elif self.mode in ("triagle", "bump"):
+                elif self.mode in ("triangle", "bump"):
                     # https://en.wikipedia.org/wiki/Sawtooth_wave
                     wave_arg = sin_arg % (2 * math.pi)
                     if self.mode == "bump":
