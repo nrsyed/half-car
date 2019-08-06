@@ -95,7 +95,6 @@ class Road:
                     else:
                         next_point = amplitude
                 elif self.mode in ("triangle", "bump"):
-                    # https://en.wikipedia.org/wiki/Sawtooth_wave
                     wave_arg = sin_arg % (2 * math.pi)
                     if self.mode == "bump":
                         wave_arg *= 2
@@ -109,6 +108,8 @@ class Road:
                         next_point = 0
             elif self.mode == "flat":
                 next_point = 0
+            else:
+                raise ValueError(f"Invalid {self.mode}")
 
             self.y_coords.append(next_point)
 
