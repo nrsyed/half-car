@@ -40,7 +40,7 @@ class Road:
         num_points = int(length * resolution)
 
         if x_min == None:
-            x_min = 0
+            x_min = -length / 2
         x_max = x_min + length
 
         # x coordinates will not change. Store y coordinates in deque.
