@@ -23,7 +23,7 @@ class Road:
         :param resolution: Number of points per meter.
         :type resolution: int
 
-        :param mode: Road profile mode: "flat", "sine", "square".
+        :param mode: Road profile mode: "flat", "sine", "square", "triangle", "bump".
         :type mode: str
 
         :param amplitude: Amplitude of sine or square wave.
@@ -40,7 +40,7 @@ class Road:
         num_points = int(length * resolution)
 
         if x_min == None:
-            x_min = 0
+            x_min = -length / 2
         x_max = x_min + length
 
         # x coordinates will not change. Store y coordinates in deque.
@@ -84,8 +84,9 @@ class Road:
         for i in range(num_new_points):
             self.y_coords.popleft()
 
-            if self.mode in ("sine", "square"):
-                sine_value = math.sin(frequency * (distance + (i / resolution)))
+            if self.mode in ("sine", "square", "triangle", "bump"):
+                sin_arg = frequency * (distance + (i / resolution))
+                sine_value = math.sin(sin_arg)
                 if self.mode == "sine":
                     next_point = amplitude * sine_value
                 elif self.mode == "square":
@@ -93,8 +94,22 @@ class Road:
                         next_point = 0
                     else:
                         next_point = amplitude
+                elif self.mode in ("triangle", "bump"):
+                    wave_arg = sin_arg % (2 * math.pi)
+                    if self.mode == "bump":
+                        wave_arg *= 2
+                    if wave_arg <= math.pi:
+                        # Rising line
+                        next_point = amplitude * wave_arg / math.pi
+                    elif wave_arg <= 2 * math.pi:
+                        # Rising line
+                        next_point = amplitude * (2 * math.pi - wave_arg) / math.pi
+                    else:
+                        next_point = 0
             elif self.mode == "flat":
                 next_point = 0
+            else:
+                raise ValueError(f"Invalid {self.mode}")
 
             self.y_coords.append(next_point)
 
