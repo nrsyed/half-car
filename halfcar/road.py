@@ -26,10 +26,10 @@ class Road:
         :param mode: Road profile mode: "flat", "sine", "square", "triangle", "bump".
         :type mode: str
 
-        :param amplitude: Amplitude of sine or square wave.
+        :param amplitude: Amplitude for sine, square, triangle, and bump profiles.
         :type amplitude: float
 
-        :param frequency: Frequency of sine or square wave.
+        :param frequency: Frequency for sine, square, triangle, bump profiles.
         :type frequency: float
 
         :param x_min: Minimum x coordinate.
@@ -85,8 +85,8 @@ class Road:
             self.y_coords.popleft()
 
             if self.mode in ("sine", "square", "triangle", "bump"):
-                sin_arg = frequency * (distance + (i / resolution))
-                sine_value = math.sin(sin_arg)
+                sine_arg = frequency * (distance + (i / resolution))
+                sine_value = math.sin(sine_arg)
                 if self.mode == "sine":
                     next_point = amplitude * sine_value
                 elif self.mode == "square":
@@ -95,14 +95,15 @@ class Road:
                     else:
                         next_point = amplitude
                 elif self.mode in ("triangle", "bump"):
-                    wave_arg = sin_arg % (2 * math.pi)
+                    wave_arg = sine_arg % (2 * math.pi)
                     if self.mode == "bump":
                         wave_arg *= 2
+
                     if wave_arg <= math.pi:
-                        # Rising line
+                        # Rising line.
                         next_point = amplitude * wave_arg / math.pi
                     elif wave_arg <= 2 * math.pi:
-                        # Rising line
+                        # Rising line.
                         next_point = amplitude * (2 * math.pi - wave_arg) / math.pi
                     else:
                         next_point = 0
