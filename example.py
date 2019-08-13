@@ -1,3 +1,4 @@
+import argparse
 from halfcar import Car, PlotSim, Road
 
 
@@ -43,6 +44,19 @@ def simulate(car, time_step=0.0002, interval=1):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--mode", "-m", type=str, default="sine",
+        help="Road profile mode: 'flat', 'sine' (default), 'square', "\
+                "'triangle', 'bump'"
+    )
+    argparser.add_argument("--time-step", "-t", type=float, default=0.0005,
+        help="Simulation time step in seconds (default 0.0005)"
+    )
+    argparser.add_argument("--interval", "-i", type=int, default=100,
+        help="Draw animation frame every <interval> time steps (default 100)"
+    )
+    argparser.parse_args()
+
     car = Car()
     # road = Road(length= 8, mode="triangle", frequency=1.8, amplitude= 0.1)
     # car = Car(road_func=road)
