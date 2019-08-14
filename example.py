@@ -55,14 +55,25 @@ if __name__ == "__main__":
     argparser.add_argument("--interval", "-i", type=int, default=100,
         help="Draw animation frame every <interval> time steps (default 100)"
     )
-    argparser.parse_args()
+    args = argparser.parse_args()
 
-    car = Car()
-    # road = Road(length= 8, mode="triangle", frequency=1.8, amplitude= 0.1)
-    # car = Car(road_func=road)
+    # Set road parameters based on car properties; note that the Car class
+    # __init__() method automatically instantiates a Road object by default.
+    # Below, we are overwriting this default.
+    road_args = {
+        "x_min": -3.3,
+        "length": 6,
+        "mode": args.mode
+    }
+    if args.mode in ("triangle", "bump"):
+        road_args["frequency"] = 1.8
+        road_args["amplitude"] = 0.05
+    road = Road(**road_args)
 
-    time_step = 0.0005
-    interval = 100
+    car = Car(road_func=road)
+
+    time_step = args.time_step
+    interval = args.interval
     generator = simulate(car, time_step=time_step, interval=interval)
     plot_sim = PlotSim(car, suspension=True)
 
