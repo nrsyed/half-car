@@ -64,19 +64,20 @@ if __name__ == "__main__":
     argparser.add_argument("--write", "-w", action="store_true",
         help="Write resulting animation to a video file"
     )
+
     args = {
         arg: val for arg, val in vars(argparser.parse_args()).items()
         if val is not None
     }
 
-    # Set road parameters.
+    # Set parameters for `Road` object.
     road_args = {
         "mode": args["mode"],
         "x_min": -3.3,
         "length": 6
     }
 
-    # Select reasonable default settings for the various modes.
+    # Select reasonable default `Road` settings for the various modes.
     if args["mode"] == "square":
         road_args["amplitude"] = args.get("amplitude", 0.03)
         road_args["frequency"] = args.get("frequency", 0.1)
@@ -86,7 +87,6 @@ if __name__ == "__main__":
     elif args["mode"] in ("triangle", "bump"):
         road_args["amplitude"] = args.get("amplitude", 0.05)
         road_args["frequency"] = args.get("frequency", 1.8)
-
 
     # Instantiate `Road` and `Car` objects, passing the `Road` object to the
     # `Car` constructor. Note that, if no road object is passed to the `Car`
