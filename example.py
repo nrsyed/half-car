@@ -49,41 +49,66 @@ if __name__ == "__main__":
         help="Road profile mode: 'flat', 'sine' (default), 'square', "\
                 "'triangle', 'bump'"
     )
+    argparser.add_argument("--amplitude", "-a", type=float,
+        help="Amplitude (in meters) for sine, square, triangle, and bump modes"
+    )
+    argparser.add_argument("--frequency", "-f", type=float,
+        help="Frequency for sine, square, triangle, and bump modes"
+    )
     argparser.add_argument("--time-step", "-t", type=float, default=0.0005,
         help="Simulation time step in seconds (default 0.0005)"
     )
     argparser.add_argument("--interval", "-i", type=int, default=100,
         help="Draw animation frame every <interval> time steps (default 100)"
     )
-    args = argparser.parse_args()
+    argparser.add_argument("--write", "-w", action="store_true",
+        help="Write resulting animation to a video file"
+    )
+    args = vars(argparser.parse_args())
+    print(args)
+    exit()
 
     # Set road parameters based on car properties; note that the Car class
-    # __init__() method automatically instantiates a Road object by default.
+    # __init__() method automatically instantiates a `Road` object by default.
     # Below, we are overwriting this default.
     road_args = {
         "x_min": -3.3,
         "length": 6,
-        "mode": args.mode
+        "mode": args["mode"]
     }
-    if args.mode in ("triangle", "bump"):
+
+    # Select reasonable default settings for the various modes.
+    if args["mode"] == "square":
+        road_args["frequency"] = args.get("frequency", 0.05)
+        road_args["amplitude"] = args.get("amplitude", 0.05)
+    elif args["mode"] in ("triangle", "bump"):
         road_args["frequency"] = 1.8
         road_args["amplitude"] = 0.05
     road = Road(**road_args)
 
+    # Instantiate the `Car` object, passing in the `Road` object defined above.
     car = Car(road_func=road)
 
-    time_step = args.time_step
-    interval = args.interval
-    generator = simulate(car, time_step=time_step, interval=interval)
+    # Create a `PlotSim` object, passing the `Car` object instantiated above.
     plot_sim = PlotSim(car, suspension=True)
 
+    # Create a generator from the generator function `simulate()` defined
+    # in this example script.
+    generator = simulate(
+        car, time_step=args["time_step"], interval=args["interval"]
+    )
+
+    # Settings for writing the animation to a video file.
     writer = "ffmpeg"
-    fps = 1 / (time_step * interval)
+    fps = 1 / (args["time_step"] * args["interval"])
     writer_args = ["-vcodec", "h264"]
 
-    # Uncomment the arguments below to save a video file.
+    # Call the `PlotSim` object's `animate()` method, passing in the required
+    # generator (which updates the `Car` object's state each time it's called).
+    # The video write parameters are optional; if the `--write`/`-w` option was
+    # not supplied when calling this script, no video will be written and the
+    # video write arguments will be ignored.
     plot_sim.animate(
         generator,
-        #write_video=True, writer=writer, fps=fps,
-        #writer_args=writer_args
+        write_video=args["write"], writer=writer, fps=fps, writer_args=writer_args
     )
