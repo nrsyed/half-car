@@ -64,9 +64,10 @@ if __name__ == "__main__":
     argparser.add_argument("--write", "-w", action="store_true",
         help="Write resulting animation to a video file"
     )
-    args = vars(argparser.parse_args())
-    print(args)
-    exit()
+    args = {
+        arg: val for arg, val in vars(argparser.parse_args()).items()
+        if val is not None
+    }
 
     # Set road parameters based on car properties; note that the Car class
     # __init__() method automatically instantiates a `Road` object by default.
@@ -79,11 +80,14 @@ if __name__ == "__main__":
 
     # Select reasonable default settings for the various modes.
     if args["mode"] == "square":
-        road_args["frequency"] = args.get("frequency", 0.05)
-        road_args["amplitude"] = args.get("amplitude", 0.05)
+        road_args["amplitude"] = args.get("amplitude", 0.03)
+        road_args["frequency"] = args.get("frequency", 0.1)
+    elif args["mode"] == "sine":
+        road_args["amplitude"] = args.get("amplitude", 0.3)
+        road_args["frequency"] = args.get("frequency", 0.04)
     elif args["mode"] in ("triangle", "bump"):
-        road_args["frequency"] = 1.8
-        road_args["amplitude"] = 0.05
+        road_args["amplitude"] = args.get("amplitude", 0.05)
+        road_args["frequency"] = args.get("frequency", 1.8)
     road = Road(**road_args)
 
     # Instantiate the `Car` object, passing in the `Road` object defined above.
