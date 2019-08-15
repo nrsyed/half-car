@@ -69,13 +69,11 @@ if __name__ == "__main__":
         if val is not None
     }
 
-    # Set road parameters based on car properties; note that the Car class
-    # __init__() method automatically instantiates a `Road` object by default.
-    # Below, we are overwriting this default.
+    # Set road parameters.
     road_args = {
+        "mode": args["mode"],
         "x_min": -3.3,
-        "length": 6,
-        "mode": args["mode"]
+        "length": 6
     }
 
     # Select reasonable default settings for the various modes.
@@ -88,12 +86,18 @@ if __name__ == "__main__":
     elif args["mode"] in ("triangle", "bump"):
         road_args["amplitude"] = args.get("amplitude", 0.05)
         road_args["frequency"] = args.get("frequency", 1.8)
-    road = Road(**road_args)
 
-    # Instantiate the `Car` object, passing in the `Road` object defined above.
+
+    # Instantiate `Road` and `Car` objects, passing the `Road` object to the
+    # `Car` constructor. Note that, if no road object is passed to the `Car`
+    # constructor via the `road_func` keyword argument, the `Car` constructor
+    # instantiates a `Road` object with certain default parameters.
+    road = Road(**road_args)
     car = Car(road_func=road)
 
     # Create a `PlotSim` object, passing the `Car` object instantiated above.
+    # Passing `True` for the `suspension` keyword argument ensures that the
+    # car's suspension springs are drawn in the animation.
     plot_sim = PlotSim(car, suspension=True)
 
     # Create a generator from the generator function `simulate()` defined
@@ -102,16 +106,15 @@ if __name__ == "__main__":
         car, time_step=args["time_step"], interval=args["interval"]
     )
 
-    # Settings for writing the animation to a video file.
-    writer = "ffmpeg"
-    fps = 1 / (args["time_step"] * args["interval"])
-    writer_args = ["-vcodec", "h264"]
-
     # Call the `PlotSim` object's `animate()` method, passing in the required
     # generator (which updates the `Car` object's state each time it's called).
     # The video write parameters are optional; if the `--write`/`-w` option was
     # not supplied when calling this script, no video will be written and the
     # video write arguments will be ignored.
+    writer = "ffmpeg"
+    fps = 1 / (args["time_step"] * args["interval"])
+    writer_args = ["-vcodec", "h264"]
+
     plot_sim.animate(
         generator,
         write_video=args["write"], writer=writer, fps=fps, writer_args=writer_args
