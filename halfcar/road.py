@@ -4,8 +4,8 @@ import numpy as np
 
 class Road:
     def __init__(
-        self, length, resolution=300, mode="flat", amplitude=0.3,
-        frequency=0.04, x_min=None
+        self, length, x_min=None, resolution=300, mode="flat", amplitude=None,
+        frequency=None
     ):
 
         """
@@ -53,8 +53,15 @@ class Road:
         # Total length of road generated, i.e., distance traveled.
         self.distance = 0
 
-        self.amplitude = amplitude
-        self.frequency = frequency
+        if amplitude is not None:
+            self.amplitude = amplitude
+        else:
+            self.amplitude = 0.3
+
+        if frequency is not None:
+            self.frequency = frequency
+        else:
+            self.frequency = 0.04
 
     def generate(self, length_to_generate):
         """
